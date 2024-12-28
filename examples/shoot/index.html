@@ -29,13 +29,17 @@
 
       import { FirstPersonPointerLockControls } from 'physics-character-controls';
 
-      import { Monster, MonsterFactory } from './monster.js';
+      import { User } from './User//User.js';
 
-      import { User } from './User.js';
+      import { HandGun } from './User/HandGun.js';
 
-      import { HandGun } from './HandGun.js';
+      import { Uzi } from './User/Uzi.js';
 
-      import { Uzi } from './Uzi.js';
+      import { Monster } from './Monster/Monster.js';
+
+      import { MonsterFactory } from './Monster/MonsterFactory.js';
+
+      import { MonsterStore } from './Monster/MonsterStore.js';
 
       const container = document.getElementById('container');
 
@@ -43,76 +47,135 @@
 
       const gltfLoader = new GLTFLoader();
       const textureLoader = new THREE.TextureLoader();
+      const audioLoader = new THREE.AudioLoader();
 
+      // Controls
       let controls;
+
+      // User
       let user;
       let loadedHandGun;
       let loadedUzi;
 
+      // Monsters
+      let monsterInterval;
+      let monsterFactory;
+      let monsterStore = new MonsterStore();
+
       Promise.all([
-        textureLoader.load('../../assets/textures/Sci_fi_Metal_Panel_007_basecolor.jpg'),
-        textureLoader.load('../../assets/textures/Sci_fi_Metal_Panel_007_normal.jpg'),
-        textureLoader.load('../../assets/textures/Sci_fi_Metal_Panel_007_roughness.jpg'),
-        textureLoader.load('../../assets/textures/Sci_fi_Metal_Panel_007_metallic.jpg'),
-      ]).then(([baseTexture, normalTexture, roughnessTexture, metallicTexture]) => {
-        const worldGeometry = new THREE.CircleGeometry(50, 32);
-        const worldMaterial = new THREE.MeshStandardMaterial();
+        // Map
+        gltfLoader.loadAsync('../assets/models/collision-world.glb'),
+        textureLoader.load('../assets/textures/Sci_fi_Metal_Panel_007_basecolor.jpg'),
+        textureLoader.load('../assets/textures/Sci_fi_Metal_Panel_007_normal.jpg'),
+        textureLoader.load('../assets/textures/Sci_fi_Metal_Panel_007_roughness.jpg'),
+        textureLoader.load('../assets/textures/Sci_fi_Metal_Panel_007_metallic.jpg'),
 
-        worldMaterial.map = baseTexture;
-        worldMaterial.normalMap = normalTexture;
-        worldMaterial.roughnessMap = roughnessTexture;
-        worldMaterial.metalnessMap = metallicTexture;
+        // Gun
+        gltfLoader.loadAsync('../assets/models/hand_gun.glb'),
 
-        baseTexture.wrapS = baseTexture.wrapT = THREE.RepeatWrapping;
-        baseTexture.repeat.set(20, 20);
+        // Monster
+        gltfLoader.loadAsync('../assets/models/monster.glb'),
+        gltfLoader.loadAsync('../assets/animations/monster_run.glb'),
+        gltfLoader.loadAsync('../assets/animations/monster_die.glb'),
+        gltfLoader.loadAsync('../assets/animations/monster_attack.glb'),
+        gltfLoader.loadAsync('../assets/animations/monster_hit.glb'),
+        audioLoader.loadAsync('../assets/audios/monster-growl.mp3'),
+        audioLoader.loadAsync('../assets/audios/monster-attack.mp3'),
+      ]).then(
+        ([
+          worldGltf,
+          baseTexture,
+          normalTexture,
+          roughnessTexture,
+          metallicTexture,
+          gunGltf,
+          monsterGltf,
+          runClip,
+          dieClip,
+          attackClip,
+          hitClip,
+          growlBuffer,
+          attackBuffer,
+        ]) => {
+          // Map
+          const worldMaterial = new THREE.MeshStandardMaterial();
 
-        normalTexture.wrapS = normalTexture.wrapT = THREE.RepeatWrapping;
-        normalTexture.repeat.set(20, 20);
+          worldMaterial.map = baseTexture;
+          worldMaterial.normalMap = normalTexture;
+          worldMaterial.roughnessMap = roughnessTexture;
+          worldMaterial.metalnessMap = metallicTexture;
 
-        roughnessTexture.wrapS = roughnessTexture.wrapT = THREE.RepeatWrapping;
-        roughnessTexture.repeat.set(20, 20);
+          // baseTexture.wrapS = baseTexture.wrapT = THREE.RepeatWrapping;
+          // baseTexture.repeat.set(20, 20);
 
-        metallicTexture.wrapS = metallicTexture.wrapT = THREE.RepeatWrapping;
-        metallicTexture.repeat.set(20, 20);
+          // normalTexture.wrapS = normalTexture.wrapT = THREE.RepeatWrapping;
+          // normalTexture.repeat.set(20, 20);
 
-        const world = new THREE.Mesh(worldGeometry, worldMaterial);
-        world.rotation.x = -Math.PI / 2;
-        world.receiveShadow = true;
-        scene.add(world);
+          // roughnessTexture.wrapS = roughnessTexture.wrapT = THREE.RepeatWrapping;
+          // roughnessTexture.repeat.set(20, 20);
 
-        controls = new FirstPersonPointerLockControls({
-          object: camera,
-          domElement: renderer.domElement,
-          worldObject: world,
-          physicsOptions: {
-            boundary: {
-              resetPoint: new THREE.Vector3(0, 0, 0),
-              x: {
-                min: -20,
-                max: 30,
-              },
-              y: {
-                min: -10,
-                max: 20,
-              },
-              z: {
-                min: -20,
-                max: 30,
+          // metallicTexture.wrapS = metallicTexture.wrapT = THREE.RepeatWrapping;
+          // metallicTexture.repeat.set(20, 20);
+          const world = worldGltf.scene;
+          world.material = worldMaterial;
+
+          scene.add(world);
+
+          // Controls
+          controls = new FirstPersonPointerLockControls({
+            object: camera,
+            domElement: renderer.domElement,
+            worldObject: world,
+            physicsOptions: {
+              boundary: {
+                resetPoint: new THREE.Vector3(0, 0, 0),
+                x: {
+                  min: -20,
+                  max: 30,
+                },
+                y: {
+                  min: -10,
+                  max: 20,
+                },
+                z: {
+                  min: -20,
+                  max: 30,
+                },
               },
             },
-          },
-        });
+          });
 
-        // User
-        gltfLoader.load('../../assets/models/hand_gun.glb', gltf => {
-          const gunObject = gltf.scene;
+          // Gun
+          loadedHandGun = gunGltf.scene;
+          const defaultGun = new HandGun(loadedHandGun);
 
-          const defaultGun = new HandGun(gunObject);
-
+          // User
           user = new User(camera, controls.collider, 100, defaultGun);
-          loadedHandGun = gunObject;
-        });
-      });
+
+          // Monster
+          monsterFactory = new MonsterFactory(
+            world,
+            listener,
+            monsterGltf,
+            runClip,
+            dieClip,
+            attackClip,
+            hitClip,
+            growlBuffer,
+            attackBuffer,
+          );
+
+          monsterInterval = setInterval(() => {
+            if (monsterStore.monsters.length > 5) return;
+
+            const monster = monsterFactory.createMonster(user);
+            if (!monster) return;
+
+            monster.addToScene(scene);
+            monsterStore.add(monster);
+          }, 1030);
+        },
+      );
 
       // Scene
       const scene = new THREE.Scene();
@@ -124,7 +187,7 @@
       // Camera
       const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
       camera.rotation.order = 'YXZ';
-      camera.position.set(0, 2, 0);
+      camera.position.set(2, 2, 2);
       scene.add(camera);
 
       // Light
@@ -153,12 +216,11 @@
       scene.add(bgmAudio);
       scene.add(shootAudio);
 
-      const audioLoader = new THREE.AudioLoader();
-      audioLoader.load('../../assets/audios/shoot.mp3', buffer => {
+      audioLoader.load('../assets/audios/shoot.mp3', buffer => {
         shootAudio.setBuffer(buffer);
         shootAudio.setVolume(0.5);
       });
-      audioLoader.load('../../assets/audios/horror-bgm.mp3', buffer => {
+      audioLoader.load('../assets/audios/horror-bgm.mp3', buffer => {
         bgmAudio.setBuffer(buffer);
         bgmAudio.setVolume(0.5);
         bgmAudio.setLoop(true);
@@ -171,26 +233,6 @@
       stats.domElement.style.top = '0px';
       container.appendChild(stats.domElement);
 
-      // Monsters
-      let monsterInterval;
-      const monsters = [];
-      const monsterObjects = [];
-
-      const monsterFactory = new MonsterFactory(listener);
-      monsterFactory.loadGLTF().then(() => {
-        monsterInterval = setInterval(() => {
-          if (monsters.length > 20) return;
-
-          const monster = monsterFactory.createMonster(camera);
-          if (!monster) return;
-
-          monster.object.position.set(Math.random() * 20 - 10, 0, Math.random() * 20 - 10);
-          scene.add(monster.object);
-          monsters.push(monster);
-          monsterObjects.push(monster.object);
-        }, 5000);
-      });
-
       const raycaster = new THREE.Raycaster();
       const pointer = new THREE.Vector2();
 
@@ -199,31 +241,22 @@
         shootAudio.play();
 
         raycaster.setFromCamera(pointer, camera);
-        const intersects = raycaster.intersectObjects(monsterObjects, true);
+        const intersects = raycaster.intersectObjects(monsterStore.objects, true);
 
         if (intersects.length === 0) return;
 
         if (intersects[0].distance > 10) return;
 
-        const monster = monsters.find(monster => monster.object.getObjectById(intersects[0].object.id));
-
+        const monster = monsterStore.findMonsterByObject(intersects[0].object);
         user.gun.shoot(monster);
-        console.log('몬스터 체력!', monster.health);
-
-        setTimeout(() => {
-          if (monster.health <= 0) {
-            scene.remove(monster.object);
-            monsters.splice(monsters.indexOf(monster), 1);
-            monsterObjects.splice(monsterObjects.indexOf(monster.object), 1);
-          }
-        }, 1000);
+        // console.log('몬스터 체력!', monster.health);
       }
 
       window.addEventListener('click', handleClick);
 
       function handleKeyDown(event) {
         if (event.key === 'q') {
-          console.log('새로운 총기 장착 중...');
+          // console.log('새로운 총기 장착 중...');
 
           if (user && user.gun) {
             if (user.gun.name === 'hand_gun') {
@@ -231,7 +264,7 @@
                 const newGun = new Uzi(loadedUzi.clone());
                 user.equipGun(newGun);
               } else {
-                gltfLoader.load('../../assets/models/uzi.glb', gltf => {
+                gltfLoader.load('../assets/models/uzi.glb', gltf => {
                   loadedUzi = gltf.scene;
                   const newGun = new Uzi(loadedUzi.clone());
                   user.equipGun(newGun);
@@ -242,7 +275,7 @@
                 const newGun = new HandGun(loadedHandGun.clone());
                 user.equipGun(newGun);
               } else {
-                gltfLoader.load('../../assets/models/hand_gun.glb', gltf => {
+                gltfLoader.load('../assets/models/hand_gun.glb', gltf => {
                   loadedHandGun = gltf.scene;
                   const newGun = new HandGun(loadedHandGun.clone());
                   user.equipGun(newGun);
@@ -250,7 +283,7 @@
               }
             }
           } else {
-            console.warn('User 또는 총기가 아직 초기화되지 않았습니다.');
+            // console.warn('User 또는 총기가 아직 초기화되지 않았습니다.');
           }
         }
       }
@@ -262,8 +295,8 @@
 
         controls && controls.update(delta);
 
-        monsters.forEach(monster => {
-          monster.update(delta);
+        monsterStore.monsters.forEach(monster => {
+          monster.update(delta, monsterStore.monsters);
         });
 
         renderer.render(scene, camera);
@@ -287,6 +320,7 @@
         controls && controls.disconnect();
 
         monsterInterval && clearInterval(monsterInterval);
+        monsterFactory.dispose();
 
         scene.traverse(object => {
           if (object.isMesh) {

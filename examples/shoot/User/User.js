@@ -27,6 +27,14 @@ class User {
     this.equipGun(newGun);
   }
 
+  get collider() {
+    return this._collider;
+  }
+
+  get position() {
+    return this._object.position;
+  }
+
   hit(damage) {
     this._hp -= damage;
     console.log(`공격을 받았습니다. 남은 HP: ${this._hp}`);

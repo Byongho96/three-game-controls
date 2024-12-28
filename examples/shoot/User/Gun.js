@@ -43,11 +43,11 @@ class Gun {
     const currentTime = Date.now();
 
     if (currentTime - this._lastShotTime < 1000 / this._fireRate) {
-      console.log(`${this._name}은(는) 아직 발사 준비 중입니다.`);
+      // console.log(`${this._name}은(는) 아직 발사 준비 중입니다.`);
       return;
     }
 
-    console.log(`${this._name}이(가) 발사되었습니다. 공격력: ${this._damage}`);
+    // console.log(`${this._name}이(가) 발사되었습니다. 공격력: ${this._damage}`);
     target.hit(this._damage);
 
     this._lastShotTime = currentTime;
