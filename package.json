@@ -14,8 +14,7 @@
   },
   "lint-staged": {
     "src/**/*.{js,ts}": [
-      "eslint --fix",
-      "prettier --write"
+      "eslint --fix"
     ]
   },
   "keywords": [],
@@ -36,10 +35,9 @@
     "cross-env": "^7.0.3",
     "eslint": "^8.57.1",
     "eslint-config-mdcs": "^5.0.0",
-    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-compat": "^6.0.2",
     "eslint-plugin-import": "^2.30.0",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-promise": "^7.1.0",
     "husky": "^8.0.0",
     "lint-staged": "^15.2.10",

@@ -48,62 +48,63 @@ type FirstPersonMouseDragControlsProps = {
  * Global object to track the current state of pressed keys.
  */
 const keyStates: Record<Actions, number> = {
-  forward: 0,
-  backward: 0,
-  leftward: 0,
-  rightward: 0,
-  jump: 0,
-  accelerate: 0,
+	forward: 0,
+	backward: 0,
+	leftward: 0,
+	rightward: 0,
+	jump: 0,
+	accelerate: 0,
 };
 
 const DEFAULT_ACTION_KEYS: ActionKeys = {
-  forward: ['KeyW', 'ArrowUp'],
-  backward: ['KeyS', 'ArrowDown'],
-  leftward: ['KeyA', 'ArrowLeft'],
-  rightward: ['KeyD', 'ArrowRight'],
-  jump: ['Space'],
-  accelerate: ['ShiftLeft'],
+	forward: [ 'KeyW', 'ArrowUp' ],
+	backward: [ 'KeyS', 'ArrowDown' ],
+	leftward: [ 'KeyA', 'ArrowLeft' ],
+	rightward: [ 'KeyD', 'ArrowRight' ],
+	jump: [ 'Space' ],
+	accelerate: [ 'ShiftLeft' ],
 };
 
 /**
  * FirstPersonMouseDragControls class allows controlling a 3D object using the mouse drag,
  */
 class FirstPersonMouseDragControls extends PhysicsControls {
-  // Character animations
-  actionKeys: ActionKeys;
 
-  enableZoom: boolean;
-  zoomSpeed: number;
+	// Character animations
+	actionKeys: ActionKeys;
 
-  // Physics options
-  eyeHeight: number;
-  jumpForce: number;
-  groundMoveSpeed: number;
-  floatMoveSpeed: number;
-  rotateSpeed: number;
+	enableZoom: boolean;
+	zoomSpeed: number;
 
-  enableDiagonalMovement: boolean;
+	// Physics options
+	eyeHeight: number;
+	jumpForce: number;
+	groundMoveSpeed: number;
+	floatMoveSpeed: number;
+	rotateSpeed: number;
 
-  enableAcceleration: boolean;
-  accelerationFactor: number;
+	enableDiagonalMovement: boolean;
 
-  private _keyCount: number = 0;
+	enableAcceleration: boolean;
+	accelerationFactor: number;
 
-  // Temporary vectors for calculations
-  private _isMouseDown: boolean = false;
-  private _objectLocalDirection: Vector3 = new Vector3();
-  private _accumulatedDirection: Vector3 = new Vector3();
-  private _worldYDirection: Vector3 = new Vector3(0, 1, 0);
+	private _keyCount: number = 0;
 
-  // Handlers for keyboard and mouse events.
-  private onKeyDown: (event: KeyboardEvent) => void;
-  private onKeyUp: (event: KeyboardEvent) => void;
-  private onMouseDown: () => void;
-  private onMouseUp: () => void;
-  private onMouseMove: (event: MouseEvent) => void;
-  private onMouseWheel: (event: WheelEvent) => void;
+	// Temporary vectors for calculations
+	private _isMouseDown: boolean = false;
+	private _objectLocalDirection: Vector3 = new Vector3();
+	private _accumulatedDirection: Vector3 = new Vector3();
+	private _worldYDirection: Vector3 = new Vector3( 0, 1, 0 );
 
-  /**
+	// Handlers for keyboard and mouse events.
+	private onKeyDown: ( event: KeyboardEvent ) => void;
+	private onKeyUp: ( event: KeyboardEvent ) => void;
+	private onMouseDown: () => void;
+	private onMouseUp: () => void;
+	private onMouseMove: ( event: MouseEvent ) => void;
+	private onMouseWheel: ( event: WheelEvent ) => void;
+
+	/**
    * Constructs a new FirstPersonMouseDragControls  instance.
    * @param object - The 3D object to control.
    * @param domElement - The HTML element for event listeners (optional).
@@ -113,250 +114,315 @@ class FirstPersonMouseDragControls extends PhysicsControls {
    * @param animationOptions - Configuration for animations (optional).
    * @param physicsOptions - Physics configuration options (optional).
    */
-  constructor({
-    object,
-    domElement,
-    worldObject,
-    actionKeys,
-    cameraOptions,
-    physicsOptions,
-  }: FirstPersonMouseDragControlsProps) {
-    super(object, domElement, worldObject, {
-      colliderHeight: 1.6,
-      colliderRadius: 0.5,
-      ...physicsOptions,
-    });
+	constructor( {
+		object,
+		domElement,
+		worldObject,
+		actionKeys,
+		cameraOptions,
+		physicsOptions,
+	}: FirstPersonMouseDragControlsProps ) {
 
-    this.object.rotation.order = 'YZX';
+		super( object, domElement, worldObject, {
+			colliderHeight: 1.6,
+			colliderRadius: 0.5,
+			...physicsOptions,
+		} );
 
-    this.actionKeys = actionKeys ?? DEFAULT_ACTION_KEYS;
+		this.object.rotation.order = 'YZX';
 
-    this.enableZoom = cameraOptions?.enableZoom ?? true;
-    this.zoomSpeed = cameraOptions?.zoomSpeed ?? 1;
+		this.actionKeys = actionKeys ?? DEFAULT_ACTION_KEYS;
 
-    // Set physics parameters with defaults if not provided.
-    this.eyeHeight = physicsOptions?.eyeHeight ?? 1.5;
-    this.jumpForce = physicsOptions?.jumpForce ?? 15;
-    this.groundMoveSpeed = physicsOptions?.groundMoveSpeed ?? 30;
-    this.floatMoveSpeed = physicsOptions?.floatMoveSpeed ?? 8;
-    this.rotateSpeed = physicsOptions?.rotateSpeed ?? 0.5;
+		this.enableZoom = cameraOptions?.enableZoom ?? true;
+		this.zoomSpeed = cameraOptions?.zoomSpeed ?? 1;
 
-    this.enableDiagonalMovement = physicsOptions?.enableDiagonalMovement ?? true;
+		// Set physics parameters with defaults if not provided.
+		this.eyeHeight = physicsOptions?.eyeHeight ?? 1.5;
+		this.jumpForce = physicsOptions?.jumpForce ?? 15;
+		this.groundMoveSpeed = physicsOptions?.groundMoveSpeed ?? 30;
+		this.floatMoveSpeed = physicsOptions?.floatMoveSpeed ?? 8;
+		this.rotateSpeed = physicsOptions?.rotateSpeed ?? 0.5;
 
-    this.enableAcceleration = physicsOptions?.enableAcceleration ?? true;
-    this.accelerationFactor = physicsOptions?.accelerationFactor ?? 1.5;
+		this.enableDiagonalMovement = physicsOptions?.enableDiagonalMovement ?? true;
 
-    // Bind key event handlers.
-    this.onKeyDown = this._onKeyDown.bind(this);
-    this.onKeyUp = this._onKeyUp.bind(this);
-    this.onMouseDown = this._onMouseDown.bind(this);
-    this.onMouseUp = this._onMouseUp.bind(this);
-    this.onMouseMove = this._onMouseMove.bind(this);
-    this.onMouseWheel = this._onMouseWheel.bind(this);
+		this.enableAcceleration = physicsOptions?.enableAcceleration ?? true;
+		this.accelerationFactor = physicsOptions?.accelerationFactor ?? 1.5;
 
-    // Connect controls to key events.
-    this.connect();
-  }
+		// Bind key event handlers.
+		this.onKeyDown = this._onKeyDown.bind( this );
+		this.onKeyUp = this._onKeyUp.bind( this );
+		this.onMouseDown = this._onMouseDown.bind( this );
+		this.onMouseUp = this._onMouseUp.bind( this );
+		this.onMouseMove = this._onMouseMove.bind( this );
+		this.onMouseWheel = this._onMouseWheel.bind( this );
 
-  /**
+		// Connect controls to key events.
+		this.connect();
+
+	}
+
+	/**
    * Retrieves the forward _objectWorldDirection vector of the object, ignoring the Y-axis.
    * @returns A normalized Vector3 representing the forward _objectWorldDirection.
    */
-  private _getForwardVector(): Vector3 {
-    this.object.getWorldDirection(this._objectLocalDirection);
-    this._objectLocalDirection.y = 0;
-    this._objectLocalDirection.normalize();
+	private _getForwardVector(): Vector3 {
 
-    return this._objectLocalDirection;
-  }
+		this.object.getWorldDirection( this._objectLocalDirection );
+		this._objectLocalDirection.y = 0;
+		this._objectLocalDirection.normalize();
 
-  /**
+		return this._objectLocalDirection;
+
+	}
+
+	/**
    * Gets the side (right) direction vector based on the camera's orientation.
    * @returns Normalized side vector.
    */
-  private _getSideVector(): Vector3 {
-    this.object.getWorldDirection(this._objectLocalDirection);
-    this._objectLocalDirection.y = 0;
-    this._objectLocalDirection.normalize();
-    this._objectLocalDirection.cross(this.object.up);
-    return this._objectLocalDirection;
-  }
+	private _getSideVector(): Vector3 {
 
-  private _accumulateDirection() {
-    this._accumulatedDirection.set(0, 0, 0);
+		this.object.getWorldDirection( this._objectLocalDirection );
+		this._objectLocalDirection.y = 0;
+		this._objectLocalDirection.normalize();
+		this._objectLocalDirection.cross( this.object.up );
+		return this._objectLocalDirection;
 
-    if (keyStates.forward) {
-      this._accumulatedDirection.add(this._getForwardVector());
-    }
+	}
 
-    if (keyStates.backward) {
-      this._accumulatedDirection.add(this._getForwardVector().multiplyScalar(-1));
-    }
+	private _accumulateDirection() {
 
-    if (keyStates.leftward) {
-      this._accumulatedDirection.add(this._getSideVector().multiplyScalar(-1));
-    }
+		this._accumulatedDirection.set( 0, 0, 0 );
 
-    if (keyStates.rightward) {
-      this._accumulatedDirection.add(this._getSideVector());
-    }
+		if ( keyStates.forward ) {
 
-    return this._accumulatedDirection.normalize();
-  }
+			this._accumulatedDirection.add( this._getForwardVector() );
 
-  private _getMostRecentDirection() {
-    this._accumulatedDirection.set(0, 0, 0);
+		}
 
-    let lastAction: Actions | null = null;
-    let lastCount = 0;
+		if ( keyStates.backward ) {
 
-    Object.entries(keyStates).forEach(([key, value]) => {
-      if (value > lastCount) {
-        lastAction = key as Actions;
-        lastCount = value;
-      }
-    });
+			this._accumulatedDirection.add( this._getForwardVector().multiplyScalar( - 1 ) );
 
-    if (lastAction === 'forward') {
-      this._accumulatedDirection.add(this._getForwardVector());
-    } else if (lastAction === 'backward') {
-      this._accumulatedDirection.add(this._getForwardVector().multiplyScalar(-1));
-    } else if (lastAction === 'leftward') {
-      this._accumulatedDirection.add(this._getSideVector().multiplyScalar(-1));
-    } else if (lastAction === 'rightward') {
-      this._accumulatedDirection.add(this._getSideVector());
-    }
+		}
 
-    return this._accumulatedDirection;
-  }
+		if ( keyStates.leftward ) {
 
-  /**
+			this._accumulatedDirection.add( this._getSideVector().multiplyScalar( - 1 ) );
+
+		}
+
+		if ( keyStates.rightward ) {
+
+			this._accumulatedDirection.add( this._getSideVector() );
+
+		}
+
+		return this._accumulatedDirection.normalize();
+
+	}
+
+	private _getMostRecentDirection() {
+
+		this._accumulatedDirection.set( 0, 0, 0 );
+
+		let lastAction: Actions | null = null;
+		let lastCount = 0;
+
+		Object.entries( keyStates ).forEach( ( [ key, value ] ) => {
+
+			if ( value > lastCount ) {
+
+				lastAction = key as Actions;
+				lastCount = value;
+
+			}
+
+		} );
+
+		if ( lastAction === 'forward' ) {
+
+			this._accumulatedDirection.add( this._getForwardVector() );
+
+		} else if ( lastAction === 'backward' ) {
+
+			this._accumulatedDirection.add( this._getForwardVector().multiplyScalar( - 1 ) );
+
+		} else if ( lastAction === 'leftward' ) {
+
+			this._accumulatedDirection.add( this._getSideVector().multiplyScalar( - 1 ) );
+
+		} else if ( lastAction === 'rightward' ) {
+
+			this._accumulatedDirection.add( this._getSideVector() );
+
+		}
+
+		return this._accumulatedDirection;
+
+	}
+
+	/**
    * Updates movement based on physics and camera rotation.
    * @param delta - The time delta for frame-independent movement.
    */
-  private updateControls(delta: number) {
-    let speedDelta = delta * (this.isGrounded ? this.groundMoveSpeed : this.floatMoveSpeed);
-    if (this.enableAcceleration && keyStates.accelerate) speedDelta *= this.accelerationFactor;
+	private updateControls( delta: number ) {
 
-    // Move
-    let movement: Vector3;
-    if (this.enableDiagonalMovement) movement = this._accumulateDirection();
-    else movement = this._getMostRecentDirection();
+		let speedDelta = delta * ( this.isGrounded ? this.groundMoveSpeed : this.floatMoveSpeed );
+		if ( this.enableAcceleration && keyStates.accelerate ) speedDelta *= this.accelerationFactor;
 
-    this.velocity.add(movement.multiplyScalar(speedDelta));
+		// Move
+		let movement: Vector3;
+		if ( this.enableDiagonalMovement ) movement = this._accumulateDirection();
+		else movement = this._getMostRecentDirection();
 
-    // Jump if grounded.
-    if (keyStates.jump && this.isGrounded) {
-      this.velocity.y = this.jumpForce;
-    }
+		this.velocity.add( movement.multiplyScalar( speedDelta ) );
 
-    this.object.updateMatrixWorld();
-  }
+		// Jump if grounded.
+		if ( keyStates.jump && this.isGrounded ) {
 
-  /**
+			this.velocity.y = this.jumpForce;
+
+		}
+
+		this.object.updateMatrixWorld();
+
+	}
+
+	/**
    * Main update function that integrates controls, physics, camera, and animations.
    * @param delta - The time delta for consistent updates.
    */
-  update(delta: number) {
-    super.update(delta);
+	update( delta: number ) {
 
-    this.object.position.y += this.eyeHeight;
+		super.update( delta );
 
-    this.updateControls(delta);
-  }
+		this.object.position.y += this.eyeHeight;
 
-  /**
+		this.updateControls( delta );
+
+	}
+
+	/**
    * Connects the keyboard controls by adding event listeners.
    */
-  connect() {
-    super.connect();
+	connect() {
 
-    window.addEventListener('keydown', this.onKeyDown);
-    window.addEventListener('keyup', this.onKeyUp);
-    this.domElement?.addEventListener('mousedown', this.onMouseDown);
-    document.addEventListener('mouseup', this.onMouseUp);
-    this.domElement?.addEventListener('mousemove', this.onMouseMove);
-    this.domElement?.removeEventListener('wheel', this.onMouseWheel);
-  }
+		super.connect();
 
-  /**
+		window.addEventListener( 'keydown', this.onKeyDown );
+		window.addEventListener( 'keyup', this.onKeyUp );
+		this.domElement?.addEventListener( 'mousedown', this.onMouseDown );
+		document.addEventListener( 'mouseup', this.onMouseUp );
+		this.domElement?.addEventListener( 'mousemove', this.onMouseMove );
+		this.domElement?.removeEventListener( 'wheel', this.onMouseWheel );
+
+	}
+
+	/**
    * Disconnects the keyboard controls by removing event listeners.
    */
-  disconnect() {
-    super.disconnect();
+	disconnect() {
 
-    window.removeEventListener('keydown', this.onKeyDown);
-    window.removeEventListener('keyup', this.onKeyUp);
-    this.domElement?.removeEventListener('mousedown', this.onMouseDown);
-    document.removeEventListener('mouseup', this.onMouseUp);
-    this.domElement?.removeEventListener('mousemove', this.onMouseMove);
-    this.domElement?.removeEventListener('wheel', this.onMouseWheel);
-  }
+		super.disconnect();
 
-  /**
+		window.removeEventListener( 'keydown', this.onKeyDown );
+		window.removeEventListener( 'keyup', this.onKeyUp );
+		this.domElement?.removeEventListener( 'mousedown', this.onMouseDown );
+		document.removeEventListener( 'mouseup', this.onMouseUp );
+		this.domElement?.removeEventListener( 'mousemove', this.onMouseMove );
+		this.domElement?.removeEventListener( 'wheel', this.onMouseWheel );
+
+	}
+
+	/**
    * Disposes of the keyboard controls, cleaning up event listeners and animations.
    */
-  dispose() {
-    this.disconnect();
+	dispose() {
 
-    super.dispose();
-  }
+		this.disconnect();
 
-  /** Handles keydown events, updating the key state. */
-  private _onKeyDown(event: KeyboardEvent) {
-    for (const [action, keys] of Object.entries(this.actionKeys)) {
-      if (keys?.includes(event.code)) {
-        keyStates[action as Actions] = ++this._keyCount;
-        break;
-      }
-    }
-  }
+		super.dispose();
 
-  /** Handles keyup events, updating the key state. */
-  private _onKeyUp(event: KeyboardEvent) {
-    for (const [action, keys] of Object.entries(this.actionKeys)) {
-      if (keys?.includes(event.code)) {
-        keyStates[action as Actions] = 0;
-        break;
-      }
-    }
-  }
-  /** Handles mousedown events to set _isMouseDown flag. */
-  private _onMouseDown = () => {
-    this._isMouseDown = true;
-  };
+	}
 
-  /** Handles mouseup events to reset _isMouseDown flag. */
-  private _onMouseUp = () => {
-    this._isMouseDown = false;
-  };
+	/** Handles keydown events, updating the key state. */
+	private _onKeyDown( event: KeyboardEvent ) {
 
-  /** Handles mousemove events to update camera angles when mouse is down. */
-  private _onMouseMove = (event: MouseEvent) => {
-    if (!this._isMouseDown) return;
+		for ( const [ action, keys ] of Object.entries( this.actionKeys ) ) {
 
-    this.object.rotateOnWorldAxis(this._worldYDirection, (-1 * event.movementX * this.rotateSpeed) / 100);
-    this.object.rotateX((-1 * event.movementY * this.rotateSpeed) / 100);
+			if ( keys?.includes( event.code ) ) {
 
-    this.object.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.object.rotation.x));
-  };
+				keyStates[ action as Actions ] = ++ this._keyCount;
+				break;
 
-  private _onMouseWheel = (event: WheelEvent) => {
-    if (!this.enableZoom) return;
+			}
 
-    if (!(this.object instanceof PerspectiveCamera) && !(this.object instanceof OrthographicCamera)) {
-      console.warn('WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.');
-      this.enableZoom = false;
-      return;
-    }
+		}
 
-    const normalizedDelta = Math.pow(0.95, this.zoomSpeed * Math.abs(event.deltaY * 0.01));
+	}
 
-    if (event.deltaY > 0) this.object.zoom *= normalizedDelta;
-    else if (event.deltaY < 0) this.object.zoom /= normalizedDelta;
+	/** Handles keyup events, updating the key state. */
+	private _onKeyUp( event: KeyboardEvent ) {
 
-    this.object.updateProjectionMatrix();
-  };
+		for ( const [ action, keys ] of Object.entries( this.actionKeys ) ) {
+
+			if ( keys?.includes( event.code ) ) {
+
+				keyStates[ action as Actions ] = 0;
+				break;
+
+			}
+
+		}
+
+	}
+	/** Handles mousedown events to set _isMouseDown flag. */
+	private _onMouseDown = () => {
+
+		this._isMouseDown = true;
+
+	};
+
+	/** Handles mouseup events to reset _isMouseDown flag. */
+	private _onMouseUp = () => {
+
+		this._isMouseDown = false;
+
+	};
+
+	/** Handles mousemove events to update camera angles when mouse is down. */
+	private _onMouseMove = ( event: MouseEvent ) => {
+
+		if ( ! this._isMouseDown ) return;
+
+		this.object.rotateOnWorldAxis( this._worldYDirection, ( - 1 * event.movementX * this.rotateSpeed ) / 100 );
+		this.object.rotateX( ( - 1 * event.movementY * this.rotateSpeed ) / 100 );
+
+		this.object.rotation.x = Math.max( - Math.PI / 2, Math.min( Math.PI / 2, this.object.rotation.x ) );
+
+	};
+
+	private _onMouseWheel = ( event: WheelEvent ) => {
+
+		if ( ! this.enableZoom ) return;
+
+		if ( ! ( this.object instanceof PerspectiveCamera ) && ! ( this.object instanceof OrthographicCamera ) ) {
+
+			console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.' );
+			this.enableZoom = false;
+			return;
+
+		}
+
+		const normalizedDelta = Math.pow( 0.95, this.zoomSpeed * Math.abs( event.deltaY * 0.01 ) );
+
+		if ( event.deltaY > 0 ) this.object.zoom *= normalizedDelta;
+		else if ( event.deltaY < 0 ) this.object.zoom /= normalizedDelta;
+
+		this.object.updateProjectionMatrix();
+
+	};
+
 }
 
 export { FirstPersonMouseDragControls };
