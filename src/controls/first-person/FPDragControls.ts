@@ -92,7 +92,7 @@ function onMouseMove( this: FPDragControls, event: MouseEvent ) {
 	this.object.rotateOnWorldAxis( _worldYDirection, ( - 1 * event.movementX * this.rotateSpeed ) / 100 );
 	this.object.rotateX( ( - 1 * event.movementY * this.rotateSpeed ) / 100 );
 
-	this.object.rotation.x = Math.max( - Math.PI / 2, Math.min( Math.PI / 2, this.object.rotation.x ) );
+	this.object.rotation.x = Math.max( this.minXAngle, Math.min( this.maxXAngle, this.object.rotation.x ) );
 
 }
 

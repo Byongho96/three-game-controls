@@ -90,6 +90,7 @@ class TPKeyboardControls extends ThirdPersonControls {
 
 		}
 
+		this._spherical.phi = Math.max( this.minPolarAngle, Math.min( this.maxPolarAngle, this._spherical.phi ) );
 		this._spherical.makeSafe();
 
 	}

@@ -99,6 +99,7 @@ function onMouseMove( this: TPDragControls, event: MouseEvent ) {
 	this._spherical.theta -= ( event.movementX * this.rotateSpeed ) / 100;
 	this._spherical.phi -= ( event.movementY * this.rotateSpeed ) / 100;
 
+	this._spherical.phi = Math.max( this.minPolarAngle, Math.min( this.maxPolarAngle, this._spherical.phi ) );
 	this._spherical.makeSafe();
 
 }

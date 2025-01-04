@@ -81,7 +81,7 @@ class FPKeyboardControls extends FirstPersonControls {
 
 		}
 
-		this.object.rotation.x = Math.max( - Math.PI / 2, Math.min( Math.PI / 2, this.object.rotation.x ) );
+		this.object.rotation.x = Math.max( this.minXAngle, Math.min( this.maxXAngle, this.object.rotation.x ) );
 
 	}
 

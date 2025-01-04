@@ -62,10 +62,20 @@ class ThirdPersonControls extends PhysicsCharacterControls {
 	 */
 	floatingMoveSpeed: number = 8;
 
-	/** Speed of rotation.
+	/** Speed of camera rotation.
 	 * @default 1
 	 */
 	rotateSpeed: number = 1;
+
+	/** Minimum camera polar angle.
+	 * @default 0
+	 */
+	minPolarAngle: number = 0;
+
+	/** Maximum camera polar angle.
+	 * @default Math.PI
+	 */
+	maxPolarAngle: number = Math.PI;
 
 	/** Whether to rotate the object towards the moving direction.
 	 * @default true
@@ -98,8 +108,8 @@ class ThirdPersonControls extends PhysicsCharacterControls {
 	minZoom: number = 0;
 
 	/** Maximum zoom level.
-		 * @default Infinity
-		 */
+	 * @default Infinity
+	 */
 	maxZoom: number = Infinity;
 
 	/** Speed of zooming.

@@ -46,6 +46,16 @@ class FirstPersonControls extends PhysicsControls {
 	 */
 	rotateSpeed: number = 1;
 
+	/** Minimum local X-axis rotation angle.
+	 * @default - Math.PI / 2
+	 */
+	minXAngle: number = - Math.PI / 2;
+
+	/** Maximum local X-axis rotation angle.
+	 * @default Math.PI / 2
+	 */
+	maxXAngle: number = Math.PI / 2;
+
 	/** Whether to allow diagonal movement when pressing two action keys.
 	 * @default true
 	 */
