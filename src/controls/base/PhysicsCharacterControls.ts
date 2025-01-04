@@ -2,17 +2,13 @@ import {
 	AnimationAction,
 	AnimationClip,
 	AnimationMixer,
-	AnimationObjectGroup,
 	LoopOnce,
 	Object3D,
 	Quaternion,
 	Vector3,
 } from 'three';
-import { PhysicsControls, PhysicsOptions } from './PhysicsControls';
+import { PhysicsControls } from './PhysicsControls';
 
-/**
- * Animation states that can be used.
- */
 type Animations =
   | 'idle'
   | 'forward'
@@ -24,107 +20,87 @@ type Animations =
   | 'runRightward'
   | 'runLeftward'
   | 'jumpUp'
-  | 'jumpDown'
+  | 'land'
   | 'fall';
 
-/**
- * Configuration for animations and their options.
- */
-export type AnimationOptions = {
-  animationClips?: Partial<Record<Animations, AnimationClip>>;
-  transitionTime?: number;
-  transitionDelay?: number;
-  fallSpeedThreshold?: number;
-  moveSpeedThreshold?: number;
-  runSpeedThreshold?: number;
-};
+export type AnimationClips = Partial<Record<Animations, AnimationClip>>;
 
 class PhysicsCharacterControls extends PhysicsControls {
 
-	private _mixer: AnimationMixer;
-	private _objectGroup: AnimationObjectGroup;
+	// Animation mixer for the object
+	private _animationMixer: AnimationMixer;
+
+	// Animation clips
 	private _animationClips: Record<string, AnimationClip> = {};
+
+	// Animation actions synced with the clips
 	private _animationActions: Record<string, AnimationAction> = {};
 
-	// Animation options
-	transitionTime: number;
-	transitionDelay: number;
-	fallSpeedThreshold: number;
-	moveSpeedThreshold: number;
-	runSpeedThreshold: number;
+	/** Time for transitioning between animations. */
+	transitionTime: number = 0.3;
 
-	private _localVelocity: Vector3 = new Vector3();
-	private _worldQuaternion: Quaternion = new Quaternion();
-	private _currentAction: AnimationAction | null = null;
+	/** Delay for transitioning between animations. */
+	transitionDelay: number = 0.3;
 
+	/** Speed threshold to trigger the falling animation. */
+	fallSpeedThreshold: number = 15;
+
+	/** Speed threshold to trigger the moving animation. */
+	moveSpeedThreshold: number = 1;
+
+	/** Speed threshold to trigger running animations. */
+	runSpeedThreshold: number = 10;
+
+	// Internals
+	private _currentActionKey: Animations | null = null;
+	private _objectLocalVelocity: Vector3 = new Vector3();
+	private _objectWorldQuaternion: Quaternion = new Quaternion();
+
+	/**
+	 * Constructs a new PhysicsCharacterControls instance.
+	 * @param object - The character object to control.
+	 * @param domElement - The HTML element for capturing input events.
+	 * @param world - The world object used for collision detection.
+	 * @param animationClips - The animation clips for the character.
+	 */
 	constructor(
 		object: Object3D,
-		domElement: HTMLElement | null,
-		world: Object3D,
-		animationOptions: AnimationOptions = {},
-		physicsOptions: PhysicsOptions = {},
+		domElement: HTMLElement | null = null,
+		world: Object3D | null = null,
+		animationClips : AnimationClips = {}
 	) {
 
-		super( object, domElement, world, physicsOptions );
+		super( object, domElement, world );
 
-		this._objectGroup = new AnimationObjectGroup( object );
-		this._mixer = new AnimationMixer( this._objectGroup );
+		this._animationMixer = new AnimationMixer( this.object );
 
-		if ( animationOptions.animationClips ) {
+		Object.entries( animationClips ).forEach( ( [ key, clip ] ) => {
 
-			Object.entries( animationOptions.animationClips ).forEach( ( [ key, clip ] ) => {
+			this.setAnimationClip( key, clip );
 
-				this.setAnimationClip( key, clip );
-
-			} );
-
-		}
-
-		this.transitionTime = animationOptions.transitionTime ?? 0.3;
-		this.transitionDelay = animationOptions.transitionDelay ?? 0.3;
-		this.fallSpeedThreshold = animationOptions.fallSpeedThreshold ?? 15;
-		this.moveSpeedThreshold = animationOptions.moveSpeedThreshold ?? 1;
-		this.runSpeedThreshold = animationOptions.runSpeedThreshold ?? 5;
+		} );
 
 	}
 
+
 	/**
-   * Returns a read-only copy of the animation clips.
-   */
-	get clips() {
+	 * Gets a frozen copy of the animation clips.
+	 */
+	get animationClips(): Readonly<Record<string, AnimationClip>> {
 
 		return Object.freeze( { ...this._animationClips } );
 
 	}
 
-	/**
-   * Adds an object to the animation object group.
-   * @param object - The Object3D to add.
-   */
-	addObject( object: Object3D ) {
-
-		this._objectGroup.add( object );
-
-	}
 
 	/**
-   * Removes an object from the animation object group.
-   * @param object - The Object3D to remove.
-   */
-	removeObject( object: Object3D ) {
+	 * Sets an animation clip for a given key.
+	 * @param key - The key to associate with the animation clip.
+	 * @param clip - The animation clip.
+	 */
+	setAnimationClip( key: string, clip: AnimationClip ): void {
 
-		this._objectGroup.remove( object );
-
-	}
-
-	/**
-   * Adds an animation clip and its corresponding action.
-   * @param key - The identifier for the animation clip.
-   * @param clip - The AnimationClip to add.
-   */
-	setAnimationClip( key: string, clip: AnimationClip ) {
-
-		const action = this._mixer.clipAction( clip );
+		const action = this._animationMixer.clipAction( clip );
 
 		this._animationClips[ key ] = clip;
 		this._animationActions[ key ] = action;
@@ -132,50 +108,54 @@ class PhysicsCharacterControls extends PhysicsControls {
 	}
 
 	/**
-   * Removes an animation clip and its corresponding action.
-   * @param key - The identifier for the animation clip to remove.
-   */
-	removeAnimationClip( key: string ) {
+	 * Deletes an animation clip associated with a given key.
+	 * @param key - The key of the animation clip to delete.
+	 */
+	deleteAnimationClip( key: string ): void {
 
 		const clip = this._animationClips[ key ];
-		if ( ! clip ) return;
-
 		const action = this._animationActions[ key ];
+
 		if ( action ) {
 
 			action.stop();
-			this._mixer.uncacheAction( clip, this._objectGroup );
+			this._animationMixer.uncacheAction( clip, this.object );
+			delete this._animationActions[ key ];
 
 		}
 
-		this._mixer.uncacheClip( clip );
+		if ( clip ) {
 
-		delete this._animationClips[ key ];
-		delete this._animationActions[ key ];
+			this._animationMixer.uncacheClip( clip );
+			delete this._animationClips[ key ];
+
+		}
 
 	}
 
 	/**
-   * Smoothly transitions to the specified animation action over a given duration.
-   * @param key - The identifier for the animation action to transition to.
-   * @param duration - The duration of the transition in seconds.
-   * @param isOnce - (Optional) If true, the animation will play only once and stop at the last frame.
-   */
-	private _fadeToAction( key: string, duration: number, isOnce?: boolean ) {
+	 * Gets the animation action associated with a given key.
+	 * @param key - The key of the animation action to retrieve.
+	 */
+	getAnimationAction( key: string ): AnimationAction | undefined {
+
+		return this._animationActions[ key ];
+
+	}
+
+	// Fades to a new animation action
+	private _fadeToAction( key: Animations, duration: number, isOnce?: boolean ): void {
+
+		if ( key === this._currentActionKey ) return;
 
 		const action = this._animationActions[ key ];
-		if ( ! action || action === this._currentAction ) return;
+		if ( ! action ) return;
 
-		// Fade out all current actions
-		Object.values( this._animationActions ).forEach( currentAction => {
+		const currentAction = this._currentActionKey ? this._animationActions[ this._currentActionKey ] : null;
+		if ( currentAction ) currentAction.fadeOut( duration );
 
-			currentAction.fadeOut( duration );
+		action.reset();
 
-		} );
-
-		this._currentAction = action;
-
-		action.reset(); // Reset the action to start from the beginning
 		if ( isOnce ) {
 
 			action.setLoop( LoopOnce, 1 );
@@ -184,116 +164,116 @@ class PhysicsCharacterControls extends PhysicsControls {
 		}
 
 		action.fadeIn( duration );
-		action.play(); // Play the action
+		action.play();
+
+		this._currentActionKey = key;
 
 	}
 
-	/**
-   * Updates the animation based on the current state of the player.
-   */
-	private _updateAnimation() {
+	// Updates the animation based on the character's state
+	private _updateAnimation(): void {
 
-		const worldQuaternion = this.object.getWorldQuaternion( this._worldQuaternion );
-		this._localVelocity.copy( this.velocity ).applyQuaternion( worldQuaternion.invert() );
+		this.object.getWorldQuaternion( this._objectWorldQuaternion );
+		this._objectLocalVelocity.copy( this.velocity ).applyQuaternion( this._objectWorldQuaternion.invert() );
 
-		if ( this.velocity.y > 0 ) {
+		if ( this._objectLocalVelocity.y > 0 && this._animationActions.jumpUp ) {
 
 			return this._fadeToAction( 'jumpUp', this.transitionTime, true );
 
 		}
 
-		if ( this.isLanding ) {
+		if ( this.isLanding && this._animationActions.land ) {
 
-			return this._fadeToAction( 'jumpDown', this.transitionTime, true );
-
-		}
-
-		if ( this.isGrounded && this._localVelocity.z > this.runSpeedThreshold && this._animationActions.runForward ) {
-
-			return this._fadeToAction( 'runForward', this.transitionTime );
+			return this._fadeToAction( 'land', this.transitionTime, true );
 
 		}
 
-		if ( this.isGrounded && this._localVelocity.z > this.moveSpeedThreshold ) {
-
-			return this._fadeToAction( 'forward', this.transitionTime );
-
-		}
-
-		if ( this.isGrounded && this._localVelocity.z < - this.runSpeedThreshold && this._animationActions.runBackward ) {
-
-			return this._fadeToAction( 'runBackward', this.transitionTime );
-
-		}
-
-		if ( this.isGrounded && this._localVelocity.z < - this.moveSpeedThreshold ) {
-
-			return this._fadeToAction( 'backward', this.transitionTime );
-
-		}
-
-		if ( this.isGrounded && this._localVelocity.x > this.runSpeedThreshold && this._animationActions.runLeftward ) {
-
-			return this._fadeToAction( 'runLeftward', this.transitionTime );
-
-		}
-
-		if ( this.isGrounded && this._localVelocity.x > this.moveSpeedThreshold ) {
-
-			return this._fadeToAction( 'leftward', this.transitionTime );
-
-		}
-
-		if ( this.isGrounded && this._localVelocity.x < - this.runSpeedThreshold && this._animationActions.runRightward ) {
-
-			return this._fadeToAction( 'runRightward', this.transitionTime );
-
-		}
-
-		if ( this.isGrounded && this._localVelocity.x < - this.moveSpeedThreshold ) {
-
-			return this._fadeToAction( 'rightward', this.transitionTime );
-
-		}
-
-		if ( ! this.isLanding && this.velocity.y < - this.fallSpeedThreshold ) {
+		if ( this.velocity.y < - this.fallSpeedThreshold && this._currentActionKey !== 'land' && this._animationActions.fall ) {
 
 			return this._fadeToAction( 'fall', this.transitionTime );
 
 		}
 
-		if ( this.isGrounded ) {
+		if ( ! this.isGrounded ) return;
 
-			return this._fadeToAction( 'idle', this.transitionTime );
+		if ( this._objectLocalVelocity.z > this.runSpeedThreshold && this._animationActions.runForward ) {
+
+			return this._fadeToAction( 'runForward', this.transitionTime );
 
 		}
+
+		if ( this._objectLocalVelocity.z > this.moveSpeedThreshold && this._animationActions.forward ) {
+
+			return this._fadeToAction( 'forward', this.transitionTime );
+
+		}
+
+		if ( this._objectLocalVelocity.z < - this.runSpeedThreshold && this._animationActions.runBackward ) {
+
+			return this._fadeToAction( 'runBackward', this.transitionTime );
+
+		}
+
+		if ( this._objectLocalVelocity.z < - this.moveSpeedThreshold && this._animationActions.backward ) {
+
+			return this._fadeToAction( 'backward', this.transitionTime );
+
+		}
+
+		if ( this._objectLocalVelocity.x > this.runSpeedThreshold && this._animationActions.runLeftward ) {
+
+			return this._fadeToAction( 'runLeftward', this.transitionTime );
+
+		}
+
+		if ( this._objectLocalVelocity.x > this.moveSpeedThreshold && this._animationActions.leftward ) {
+
+			return this._fadeToAction( 'leftward', this.transitionTime );
+
+		}
+
+		if ( this._objectLocalVelocity.x < - this.runSpeedThreshold && this._animationActions.runRightward ) {
+
+			return this._fadeToAction( 'runRightward', this.transitionTime );
+
+		}
+
+		if ( this._objectLocalVelocity.x < - this.moveSpeedThreshold && this._animationActions.rightward ) {
+
+			return this._fadeToAction( 'rightward', this.transitionTime );
+
+		}
+
+		return this._fadeToAction( 'idle', this.transitionTime );
 
 	}
 
 	/**
-   * Updates the _mixer with the given delta time.
-   * @param delta - The time increment in seconds.
-   */
-	update( delta: number ) {
+	 * Updates the character's state, including physics and animations.
+	 * @param delta - The time elapsed since the last update (sec).
+	 */
+	update( delta: number ): void {
 
 		super.update( delta );
 
 		this._updateAnimation();
 
-		this._mixer.update( delta );
+		this._animationMixer.update( delta );
 
 	}
 
 	/**
-   * Stops all actions and disposes of the _mixer.
-   */
-	dispose() {
+	 * Disposes of the character controls, cleaning up animations and resources.
+	 */
+	dispose(): void {
 
-		this._mixer.stopAllAction();
-		this._mixer.uncacheRoot( this._objectGroup );
+		super.dispose();
+
+		this._animationMixer.stopAllAction();
+		this._animationMixer.uncacheRoot( this.object );
 
 	}
 
 }
 
-export default PhysicsCharacterControls;
+export { PhysicsCharacterControls };

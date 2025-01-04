@@ -1,173 +1,192 @@
 import { Box3, Object3D, Ray, Vector3, Controls } from 'three';
 import { Octree } from 'three/examples/jsm/math/Octree.js';
-import { Capsule } from 'three/examples/jsm/math/Capsule.js';
+import { Collider } from '../../math/Collider.js';
 
-/**
- * Event map for PhysicsControls, defining the types of events that can be dispatched.
- */
+
 export interface PhysicsControlsEventMap {
-  /**
-   * Fires when the collider has collided with the world.
-   */
-  collide: { normal: Vector3 };
+
+  collide: { type: 'collide', normal: Vector3 }; // Fires when the collider has collided with the world.
+
 }
 
-/**
- * Predefined event objects for reuse when dispatching events.
- */
-const _collideEvent = { type: 'collide' as keyof PhysicsControlsEventMap };
+const _collideEvent = { type: 'collide' as const };
 
-/**
- * Defines the minimum and maximum boundaries along an axis.
- */
-type BoundaryAxis = {
-  min: number;
-  max: number;
-};
 
-/**
- * Defines the boundary of the world and the reset point when the player goes out of bounds.
- */
-type Boundary = {
-  resetPoint: Vector3; // Reset point of the player if out of bounds
-  x: BoundaryAxis; // x-axis boundary
-  y: BoundaryAxis; // y-axis boundary
-  z: BoundaryAxis; // z-axis boundary
-};
-
-/**
- * Options to configure the physics properties of the PhysicsControls.
- */
-export type PhysicsOptions = {
-  step?: number; // Time step for the delicate physics calculations (default: )
-  gravity?: number; // Gravity of the world (default: 30)
-  maxFallSpeed?: number; // Maximum fall speed of the player (default: 20)
-  movementResistance?: number; // Resistance of the player movement (default: 4)
-  colliderHeight?: number; // Custom height of the capsule collider of the player (default: object's height)
-  colliderRadius?: number; // Custom radius of the capsule collider of the player (default: height / 4)
-  boundary?: Boundary; // Boundary of the world
-  landTimeThreshold?: number; // Threshold for determining the landing time. (default: 250)
-};
-
-/**
- * PhysicsControls class that adds physics-based controls to a 3D object.
- */
 class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 
-	private _worldOctree: Octree;
-	private _capsuleCollider: Capsule;
-	private _ray: Ray = new Ray( new Vector3(), new Vector3( 0, - 1, 0 ) );
+	private _world: Object3D | null;
 
-	// Physics properties
-	step: number;
-	gravity: number;
-	maxFallSpeed: number;
-	movementResistance: number;
+	/** Octree structure of the world object for collision detection. */
+	worldOctree: Octree = new Octree();
+
+	/** Gravitational force applied to the object.
+	 * @default 30
+	*/
+	gravity: number = 30;
+
+	/** Maximum fall speed of the object.
+	 * @default 20
+	*/
+	maxFallSpeed: number = 20;
+
+	/** Resistance applied to the object, dampen velocity.
+	 * @default 6
+	*/
+	resistance: number = 6;
+
+	/** World axis velocity vector of the object.
+	 * @default `new THREE.Vector3()` - that is `(0, 0, 0)`
+	*/
 	velocity: Vector3 = new Vector3();
-	landTimeThreshold: number;
 
-	boundary?: Boundary;
+	/** Time step for calculating physics with more precision.
+	 * @default 5
+	*/
+	step: number = 5;
 
-	private _isGrounded: boolean = false;
+	/** Time threshold for determining if the object is landing.
+	 * @default 250
+	*/
+	landTimeThreshold: number = 250;
+
+	/** Collider for the object.
+	 * @default `new Collider()`
+	 */
+	collider: Collider = new Collider();
+
+	/** Reset position for the object when it's out of the boundary
+	 * @default `new THREE.Vector3()` - that is `(0, 0, 0)`
+	*/
+	resetPoint: Vector3 = new Vector3();
+
+	/** X-axis boundary: minimum value.
+	 * @default - Infinity
+	 */
+	minXBoundary: number = - Infinity;
+
+	/** X-axis boundary: maximum value.
+	 * @default Infinity
+	 */
+	maxXBoundary: number = Infinity;
+
+	/** Y-axis boundary: minimum value.
+	 * @default - Infinity
+	 */
+	minYBoundary: number = - Infinity;
+
+	/** Y-axis boundary: maximum value.
+	 * @default Infinity
+	 */
+	maxYBoundary: number = Infinity;
+
+	/** Z-axis boundary: minimum value.
+	 * @default - Infinity
+	*/
+	minZBoundary: number = - Infinity;
+
+	/** Z-axis boundary: maximum value.
+	 * @default Infinity
+	*/
+	maxZBoundary: number = Infinity;
+
+	// Flags
 	private _isLanding: boolean = false;
+	private _isGrounded: boolean = false;
 
-	// Temporary vectors for calculations
-	private _deltaVelocity: Vector3 = new Vector3();
+	// Internals
+	private _ray: Ray = new Ray( new Vector3(), new Vector3( 0, - 1, 0 ) );
+	private _distance: Vector3 = new Vector3();
 
 	/**
    * Constructs a new PhysicsControls instance.
    * @param object - The 3D object to apply physics controls to.
-   * @param domElement - The HTML element for event listeners (optional).
+   * @param domElement - The HTML element for event listeners.
    * @param world - The world object used to build the collision octree.
-   * @param physicsOptions - Optional physics configuration.
    */
-	constructor( object: Object3D, domElement: HTMLElement | null, world: Object3D, physicsOptions?: PhysicsOptions ) {
+	constructor( object: Object3D, domElement: HTMLElement | null = null, world: Object3D | null = null ) {
 
 		super( object, domElement );
 
-		// Create an octree from the world for collision detection.
-		this._worldOctree = new Octree();
-		this._worldOctree.fromGraphNode( world );
+		this._world = world;
+		if ( world ) this.worldOctree.fromGraphNode( world );
 
-		// Create a capsule collider for the player.
+		// Set the collider size based on the object's bounding box.
 		const objectSize = new Vector3();
 		new Box3().setFromObject( this.object ).getSize( objectSize );
-
-		const radius = physicsOptions?.colliderRadius || objectSize.y / 4;
-		const height = physicsOptions?.colliderHeight || objectSize.y;
-
-		this._capsuleCollider = new Capsule( new Vector3( 0, radius, 0 ), new Vector3( 0, height - radius, 0 ), radius );
-		this._capsuleCollider.translate( object.position );
-
-		// Set physics properties
-		this.step = physicsOptions?.step ?? 5;
-		this.gravity = physicsOptions?.gravity ?? 30;
-		this.maxFallSpeed = physicsOptions?.maxFallSpeed ?? 20;
-		this.movementResistance = physicsOptions?.movementResistance ?? 6;
-		this.landTimeThreshold = physicsOptions?.landTimeThreshold ?? 250;
-
-		// Set boundary properties if provided.
-		this.boundary = physicsOptions?.boundary;
+		this.collider.radius = objectSize.y / 4;
+		this.collider.length = objectSize.y / 2;
 
 	}
 
-	get isGrounded() {
+	/**
+   * Gets the current world object.
+   */
+	get world(): Object3D | null {
 
-		return this._isGrounded;
+		return this._world;
 
 	}
 
-	get isLanding() {
+	/**
+   * Sets a new world object and rebuilds the collision octree.
+   * @param world - The new world object.
+   */
+	set world( world: Object3D | null ) {
+
+		this._world = world;
+		if ( world ) this.worldOctree.fromGraphNode( world );
+
+	}
+
+	/**
+   * Checks if the object is currently landing.
+   */
+	get isLanding(): boolean {
 
 		return this._isLanding;
 
 	}
 
-	get collider() {
+	/**
+   * Checks if the object is currently grounded.
+   */
+	get isGrounded(): boolean {
 
-		return this._capsuleCollider;
+		return this._isGrounded;
 
 	}
 
-	/**
-   * Checks for collisions between the player's collider and the world octree.
-   * Updates the player's grounded state and adjusts velocity and position accordingly.
-   */
-	private _checkCollisions() {
+	// Check for collisions and translate the collider.
+	private _checkCollisions(): void {
 
 		this._isGrounded = false;
 
-		const collisionResult = this._worldOctree.capsuleIntersect( this.collider );
+		const collisionResult = this.worldOctree.capsuleIntersect( this.collider );	// Check for collisions with the world octree.
 
 		if ( ! collisionResult ) return;
 
-		if ( collisionResult.normal.y > 0 ) {
+		if ( collisionResult.normal.y > 0 ) this._isGrounded = true;
 
-			// Player is grounded.
-			this._isGrounded = true;
-
-		}
-
-		// Adjust the collider position to resolve penetration.
 		if ( collisionResult.depth >= 1e-10 ) {
 
 			this.collider.translate( collisionResult.normal.multiplyScalar( collisionResult.depth ) );
-			this.dispatchEvent( { ..._collideEvent, normal: collisionResult.normal.normalize() } );
+			this.dispatchEvent( { ..._collideEvent, normal: collisionResult.normal.normalize() as Vector3 } );
 
 		}
 
 	}
 
-	private _checkLanding() {
+	// Check if the object is landing based on the landTimeThreshold.
+	private _checkIsLanding(): void {
 
 		this._isLanding = false;
 
 		if ( this._isGrounded || this.velocity.y >= 0 ) return;
 
-		this._ray.origin.copy( this._capsuleCollider.start ).y -= this._capsuleCollider.radius;
-		const rayResult = this._worldOctree.rayIntersect( this._ray );
+		this._ray.origin.copy( this.collider.start ).y -= this.collider.radius;
+		const rayResult = this.worldOctree.rayIntersect( this._ray );
 
-		if ( rayResult.distance / - this._deltaVelocity.y < this.landTimeThreshold ) {
+		if ( Math.abs( rayResult.distance / - this._distance.y - this.landTimeThreshold ) < 50 ) {
 
 			this._isLanding = true;
 
@@ -175,25 +194,15 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 
 	}
 
-	/**
-   * Resets the player's position if they are out of the defined world boundaries.
-   */
-	private _teleportPlayerIfOutOfBounds() {
+	// Teleport the player back to the reset point if it's out of the boundary.
+	private _teleportPlayerIfOutOfBounds(): void {
 
-		if ( ! this.boundary ) return;
-
-		const { resetPoint, x, y, z } = this.boundary;
 		const { x: px, y: py, z: pz } = this.object.position;
 
-		// Check if the player is out of bounds.
-		if ( px < x.min || px > x.max || py < y.min || py > y.max || pz < z.min || pz > z.max ) {
 
-			this.collider.end.set(
-				resetPoint.x,
-				resetPoint.y + this.collider.start.distanceTo( this.collider.end ) + this.collider.radius,
-				resetPoint.z,
-			);
-			this.collider.start.set( resetPoint.x, resetPoint.y + this.collider.radius, resetPoint.z );
+		if ( px < this.minXBoundary || px > this.maxXBoundary || py < this.minYBoundary || py > this.maxYBoundary || pz < this.minZBoundary || pz > this.maxZBoundary ) {
+
+			this.collider.translate( this._distance.subVectors( this.resetPoint, this.object.position ) );
 			this.velocity.set( 0, 0, 0 );
 
 		}
@@ -201,63 +210,45 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 	}
 
 	/**
-   * Updates the player's physics state.
-   * @param delta - The time step for the update (in seconds).
+   * Calculate the physics collision calculations and update object state.
+   * @param delta - The time elapsed since the last update (sec).
    */
-	update( delta: number ) {
-
-		if ( ! this.enabled ) return;
+	update( delta: number ): void {
 
 		super.update( delta );
+
+		if ( ! this.enabled ) return;
 
 		const stepDelta = delta / this.step;
 
 		for ( let i = 0; i < this.step; i ++ ) {
 
-			// Apply movement resistance (damping).
-			let damping = Math.exp( - this.movementResistance * stepDelta ) - 1; // Always negative
+			let damping = Math.exp( - this.resistance * stepDelta ) - 1; // Always negative (resistance)
 
 			if ( ! this._isGrounded ) {
 
 				this.velocity.y -= this.gravity * stepDelta;
-				this.velocity.y = Math.max( this.velocity.y, - this.maxFallSpeed ); // Limit fall speed
+				this.velocity.y = Math.max( this.velocity.y, - this.maxFallSpeed );
 				damping *= 0.1; // Small air resistance
 
 			}
 
 			this.velocity.addScaledVector( this.velocity, damping );
 
-			this._deltaVelocity.copy( this.velocity ).multiplyScalar( stepDelta );
-			this.collider.translate( this._deltaVelocity );
+			this._distance.copy( this.velocity ).multiplyScalar( stepDelta );
+			this.collider.translate( this._distance );
 
 			this._checkCollisions();
-			this._checkLanding();
-
-			this._teleportPlayerIfOutOfBounds();
 
 		}
 
-		// Update the object's position to match the collider.
+		this._checkIsLanding();
+
+		this._teleportPlayerIfOutOfBounds();
+
+		// Sync the object's position with the collider.
 		this.object.position.copy( this.collider.start );
 		this.object.position.y -= this.collider.radius;
-
-	}
-
-	connect() {
-
-		super.connect();
-
-	}
-
-	disconnect() {
-
-		super.disconnect();
-
-	}
-
-	dispose() {
-
-		super.dispose();
 
 	}
 
