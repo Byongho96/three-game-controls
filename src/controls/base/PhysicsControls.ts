@@ -47,7 +47,7 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 	/** Time threshold for determining if the object is landing.
 	 * @default 250
 	*/
-	landTimeThreshold: number = 250;
+	landTimeThreshold: number = 0.3;
 
 	/** Collider for the object.
 	 * @default `new Collider()`
@@ -165,7 +165,12 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 
 		if ( ! collisionResult ) return;
 
-		if ( collisionResult.normal.y > 0 ) this._isGrounded = true;
+		if ( collisionResult.normal.y > 0 ) {
+
+			this._isGrounded = true;
+			this.velocity.y = 0;
+
+		}
 
 		if ( collisionResult.depth >= 1e-10 ) {
 
@@ -181,12 +186,18 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 
 		this._isLanding = false;
 
-		if ( this._isGrounded || this.velocity.y >= 0 ) return;
+		if ( this._isGrounded || this.velocity.y > 0 ) return;
 
 		this._ray.origin.copy( this.collider.start ).y -= this.collider.radius;
 		const rayResult = this.worldOctree.rayIntersect( this._ray );
 
-		if ( Math.abs( rayResult.distance / - this._distance.y - this.landTimeThreshold ) < 50 ) {
+		const t1 = Math.min( ( this.maxFallSpeed + this.velocity.y ) / this.gravity, this.landTimeThreshold );
+		const d1 = ( ( this.gravity * t1 - 2 * this.velocity.y ) * t1 ) / 2;
+
+		const t2 = this.landTimeThreshold - t1;
+		const d2 = this.maxFallSpeed * t2;
+
+		if ( Math.abs( d1 + d2 - rayResult.distance ) < 0.2 ) {
 
 			this._isLanding = true;
 
@@ -233,7 +244,8 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 
 			}
 
-			this.velocity.addScaledVector( this.velocity, damping );
+			this.velocity.x += this.velocity.x * damping;
+			this.velocity.z += this.velocity.z * damping;
 
 			this._distance.copy( this.velocity ).multiplyScalar( stepDelta );
 			this.collider.translate( this._distance );
