@@ -92,10 +92,20 @@ class ThirdPersonControls extends PhysicsCharacterControls {
 	 */
 	enableZoom: boolean = true;
 
-	/** Speed of zooming.
-	 * @default 0.1
+	/** Minimum zoom level.
+	 * @default 0
 	 */
-	zoomSpeed: number = 0.1;
+	minZoom: number = 0;
+
+	/** Maximum zoom level.
+		 * @default Infinity
+		 */
+	maxZoom: number = Infinity;
+
+	/** Speed of zooming.
+	 * @default 1
+	 */
+	zoomSpeed: number = 1;
 
 	/* Spherical coordinates for camera position.
 	 * @default `new THREE.Spherical()`
@@ -439,6 +449,8 @@ function onMouseWheel( this: ThirdPersonControls, event: WheelEvent ): void {
 
 	if ( event.deltaY > 0 ) this.camera.zoom *= normalizedDelta;
 	else if ( event.deltaY < 0 ) this.camera.zoom /= normalizedDelta;
+
+	this.camera.zoom = Math.max( this.minZoom, Math.min( this.maxZoom, this.camera.zoom ) );
 
 	this.camera.updateProjectionMatrix();
 

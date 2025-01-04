@@ -66,10 +66,20 @@ class FirstPersonControls extends PhysicsControls {
 	 */
 	enableZoom: boolean = true;
 
-	/** Speed of zooming.
-	 * @default 0.1
+	/** Minimum zoom level.
+	 * @default 0
 	 */
-	zoomSpeed: number = 0.1;
+	minZoom: number = 0;
+
+	/** Maximum zoom level.
+	 * @default Infinity
+	 */
+	maxZoom: number = Infinity;
+
+	/** Speed of zooming.
+	 * @default 1
+	 */
+	zoomSpeed: number = 1;
 
 	// Internals but accessed by handlers
 	_actionKeyStates: Record<Actions, number> = {
@@ -335,6 +345,8 @@ function onMouseWheel( this: FirstPersonControls, event: WheelEvent ): void {
 
 	if ( event.deltaY > 0 ) this.object.zoom *= normalizedDelta;
 	else if ( event.deltaY < 0 ) this.object.zoom /= normalizedDelta;
+
+	this.object.zoom = Math.max( this.minZoom, Math.min( this.maxZoom, this.object.zoom ) );
 
 	this.object.updateProjectionMatrix();
 
