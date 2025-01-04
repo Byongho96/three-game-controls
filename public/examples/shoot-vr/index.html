@@ -44,10 +44,10 @@
       let controls;
 
       Promise.all([
-        textureLoader.load('../../assets/textures/Sci_fi_Metal_Panel_007_basecolor.jpg'),
-        textureLoader.load('../../assets/textures/Sci_fi_Metal_Panel_007_normal.jpg'),
-        textureLoader.load('../../assets/textures/Sci_fi_Metal_Panel_007_roughness.jpg'),
-        textureLoader.load('../../assets/textures/Sci_fi_Metal_Panel_007_metallic.jpg'),
+        textureLoader.load('../assets/textures/Sci_fi_Metal_Panel_007_basecolor.jpg'),
+        textureLoader.load('../assets/textures/Sci_fi_Metal_Panel_007_normal.jpg'),
+        textureLoader.load('../assets/textures/Sci_fi_Metal_Panel_007_roughness.jpg'),
+        textureLoader.load('../assets/textures/Sci_fi_Metal_Panel_007_metallic.jpg'),
       ]).then(([baseTexture, normalTexture, roughnessTexture, metallicTexture]) => {
         const worldGeometry = new THREE.CircleGeometry(50, 32);
         const worldMaterial = new THREE.MeshStandardMaterial();
@@ -74,10 +74,9 @@
         world.receiveShadow = true;
         scene.add(world);
 
-        controls = new PhysicsControls(cameraGrandParent, renderer.domElement, world, {
-          colliderHeight: 1.6,
-          colliderRadius: 0.5,
-        });
+        controls = new PhysicsControls(cameraGrandParent, renderer.domElement, world)
+				controls.collider.radius = 0.5
+				controls.collider.length = 0.6
         controls.enabled = false;
       });
 
@@ -133,11 +132,11 @@
       scene.add(shootAudio);
 
       const audioLoader = new THREE.AudioLoader();
-      audioLoader.load('../../assets/audios/shoot.mp3', buffer => {
+      audioLoader.load('../assets/audios/shoot.mp3', buffer => {
         shootAudio.setBuffer(buffer);
         shootAudio.setVolume(0.5);
       });
-      audioLoader.load('../../assets/audios/horror-bgm.mp3', buffer => {
+      audioLoader.load('../assets/audios/horror-bgm.mp3', buffer => {
         bgmAudio.setBuffer(buffer);
         bgmAudio.setVolume(0.5);
         bgmAudio.setLoop(true);

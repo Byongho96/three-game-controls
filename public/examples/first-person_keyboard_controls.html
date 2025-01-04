@@ -30,7 +30,7 @@
 
       import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-      import { FirstPersonKeyboardControls } from 'physics-character-controls';
+      import { FPKeyboardControls } from 'physics-character-controls';
       import { PhysicsControlsHelper } from 'physics-character-controls';
 
       const container = document.getElementById('container');
@@ -53,28 +53,8 @@
           }
         });
 
-        controls = new FirstPersonKeyboardControls({
-          object: camera,
-          domElement: renderer.domElement,
-          worldObject: world.scene,
-          physicsOptions: {
-            boundary: {
-              resetPoint: new THREE.Vector3(0, 0, 0),
-              x: {
-                min: -20,
-                max: 30,
-              },
-              y: {
-                min: -10,
-                max: 20,
-              },
-              z: {
-                min: -20,
-                max: 30,
-              },
-            },
-          },
-        });
+        controls = new FPKeyboardControls(camera, renderer.domElement, world.scene);
+				controls.minYBoundary = -10;
 
         helpers = new PhysicsControlsHelper(controls, 0xffffff);
         helpers.visible = false;
@@ -88,9 +68,9 @@
         const folder2 = gui.addFolder('Physics');
         folder2.add(controls, 'gravity', 0, 50).name('gravity').listen();
         folder2.add(controls, 'jumpForce', 0, 30).name('jump force').listen();
-        folder2.add(controls, 'groundMoveSpeed', 0, 50).name('move speed').listen();
+        folder2.add(controls, 'groundedMoveSpeed', 0, 50).name('move speed').listen();
         folder2.add(controls, 'rotateSpeed', 0, 5).name('rotate speed').listen();
-        folder2.add(controls, 'movementResistance', 0, 10).name('resistance').listen();
+        folder2.add(controls, 'resistance', 0, 10).name('resistance').listen();
         folder2.add(controls, 'enableDiagonalMovement').name('diagonal movement').listen();
         folder2.add(controls, 'enableAcceleration').name('enable acceleration').listen();
         folder2.add(controls, 'accelerationFactor', 1, 3).name('acceleration factor').listen();
