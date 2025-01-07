@@ -1,11 +1,13 @@
 export * from './controls/base/PhysicsControls';
+export * from './controls/base/FirstPersonControls';
+export * from './controls/base/ThirdPersonControls';
 
-export * from './controls/FirstPersonKeyboardControls';
-export * from './controls/FirstPersonMouseDragControls';
-export * from './controls/FirstPersonPointerLockControls';
+export * from './controls/FPKeyboardControls';
+export * from './controls/FPKeyboardDragControls';
+export * from './controls/FPKeyboardPointerLockControls';
 
-export * from './controls/ThirdPersonMouseDragControls';
-export * from './controls/ThirdPersonPointerLockControls';
-export * from './controls/ThirdPersonKeyboardControls';
+export * from './controls/TPKeyboardControls';
+export * from './controls/TPKeyboardDragControls';
+export * from './controls/TPKeyboardPointerLockControls';
 
 export * from './helpers/PhysicsControlsHelper';
