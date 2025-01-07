@@ -2,7 +2,8 @@
   "FirstPerson": [
     "first-person_keyboard_controls",
     "first-person_mousedrag_controls",
-    "first-person_pointerlock_controls"
+    "first-person_pointerlock_controls",
+    "shoot/first-person_pointerlock_shooting"
   ],
   "ThirdPerson": [
     "third-person_keyboard_controls",

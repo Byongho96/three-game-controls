@@ -30,7 +30,7 @@
 
 			import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-			import { ThirdPersonMouseDragControls, PhysicsControlsHelper } from 'physics-character-controls';
+			import { TPKeyboardDragControls, PhysicsControlsHelper } from 'physics-character-controls';
 
 			const container = document.getElementById( 'container' );
 
@@ -102,45 +102,28 @@
 			
 					} );
 
-					controls = new ThirdPersonMouseDragControls( {
-						object: character.scene,
-						domElement: renderer.domElement,
-						worldObject: world.scene,
-						camera: camera,
-						animationOptions: {
-							animationClips: {
-								idle: idle.animations[ 0 ],
-								forward: forward.animations[ 0 ],
-								backward: backward.animations[ 0 ],
-								leftward: leftward.animations[ 0 ],
-								rightward: rightward.animations[ 0 ],
-								runForward: runForward.animations[ 0 ],
-								runBackward: runBackward.animations[ 0 ],
-								runLeftward: runLeftward.animations[ 0 ],
-								runRightward: runRightward.animations[ 0 ],
-								jumpUp: jumpUp.animations[ 0 ],
-								jumpDown: jumpDown.animations[ 0 ],
-								fall: fall.animations[ 0 ],
-							},
+					controls = new TPKeyboardDragControls(
+						character.scene,
+						renderer.domElement,
+						world.scene,
+						{
+							IDLE: idle.animations[ 0 ],
+							MOVE_FORWARD: forward.animations[ 0 ],
+							MOVE_BACKWARD: backward.animations[ 0 ],
+							MOVE_LEFTWARD: leftward.animations[ 0 ],
+							MOVE_RIGHTWARD: rightward.animations[ 0 ],
+							RUN_FORWARD: runForward.animations[ 0 ],
+							RUN_BACKWARD: runBackward.animations[ 0 ],
+							RUN_LEFTWARD: runLeftward.animations[ 0 ],
+							RUN_RIGHTWARD: runRightward.animations[ 0 ],
+							JUMP_UP: jumpUp.animations[ 0 ],
+							LAND: jumpDown.animations[ 0 ],
+							FALL: fall.animations[ 0 ],
 						},
-						physicsOptions: {
-							boundary: {
-								resetPoint: new THREE.Vector3( 0, 0, 0 ),
-								x: {
-									min: - 20,
-									max: 30,
-								},
-								y: {
-									min: - 10,
-									max: 20,
-								},
-								z: {
-									min: - 20,
-									max: 30,
-								},
-							},
-						},
-					} );
+						camera,
+					);
+					controls.minYBoundary = - 10;
+
 
 					helpers = new PhysicsControlsHelper( controls, 0xffffff );
 					helpers.visible = false;
@@ -154,10 +137,9 @@
 					const folder2 = gui.addFolder( 'Physics' );
 					folder2.add( controls, 'gravity', 0, 50 ).name( 'gravity' ).listen();
 					folder2.add( controls, 'jumpForce', 0, 30 ).name( 'jump force' ).listen();
-					folder2.add( controls, 'groundMoveSpeed', 0, 50 ).name( 'move speed' ).listen();
+					folder2.add( controls, 'groundedMoveSpeed', 0, 50 ).name( 'move speed' ).listen();
 					folder2.add( controls, 'rotateSpeed', 0, 5 ).name( 'rotate speed' ).listen();
-					folder2.add( controls, 'movementResistance', 0, 10 ).name( 'resistance' ).listen();
-					folder2.add( controls, 'enableDiagonalMovement' ).name( 'diagonal movement' ).listen();
+					folder2.add( controls, 'resistance', 0, 10 ).name( 'resistance' ).listen();
 					folder2.add( controls, 'enableRotationOnMove' ).name( 'rotation on move' ).listen();
 					folder2.add( controls, 'enableAcceleration' ).name( 'enable acceleration' ).listen();
 					folder2.add( controls, 'accelerationFactor', 1, 3 ).name( 'acceleration factor' ).listen();

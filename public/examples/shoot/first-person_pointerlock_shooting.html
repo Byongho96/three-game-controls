@@ -4,7 +4,7 @@
 		<title>Physics Character Controls - Pointer Lock Example</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
-		<link type="text/css" rel="stylesheet" href="main.css" />
+		<link type="text/css" rel="stylesheet" href="../main.css" />
 	</head>
 	<body>
 		<div id="info">Kill the monsters by clicking on them</div>
@@ -27,7 +27,7 @@
 
 			import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-			import { FirstPersonPointerLockControls } from 'physics-character-controls';
+			import { FPKeyboardPointerLockControls } from 'physics-character-controls';
 
 			import { User } from './User//User.js';
 
@@ -121,28 +121,8 @@
 					scene.add( world );
 
 					// Controls
-					controls = new FirstPersonPointerLockControls( {
-						object: camera,
-						domElement: renderer.domElement,
-						worldObject: world,
-						physicsOptions: {
-							boundary: {
-								resetPoint: new THREE.Vector3( 0, 0, 0 ),
-								x: {
-									min: - 20,
-									max: 30,
-								},
-								y: {
-									min: - 10,
-									max: 20,
-								},
-								z: {
-									min: - 20,
-									max: 30,
-								},
-							},
-						},
-					} );
+					controls = new FPKeyboardPointerLockControls( camera, renderer.domElement, world );
+					controls.minYBoundary = - 10;
 
 					// Gun
 					loadedHandGun = gunGltf.scene;
