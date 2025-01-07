@@ -47,6 +47,7 @@ export type PhysicsOptions = {
   colliderRadius?: number; // Custom radius of the capsule collider of the player (default: height / 4)
   boundary?: Boundary; // Boundary of the world
   landTimeThreshold?: number; // Threshold for determining the landing time. (default: 250)
+	landTolerance?: number; // Tolerance for landing detection (default: 0.2)
 };
 
 /**
@@ -65,6 +66,7 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 	movementResistance: number;
 	velocity: Vector3 = new Vector3();
 	landTimeThreshold: number;
+	landTolerance: number = 0.2;
 
 	boundary?: Boundary;
 
@@ -104,7 +106,8 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 		this.gravity = physicsOptions?.gravity ?? 30;
 		this.maxFallSpeed = physicsOptions?.maxFallSpeed ?? 20;
 		this.movementResistance = physicsOptions?.movementResistance ?? 6;
-		this.landTimeThreshold = physicsOptions?.landTimeThreshold ?? 250;
+		this.landTimeThreshold = physicsOptions?.landTimeThreshold ?? 0.3;
+		this.landTolerance = physicsOptions?.landTolerance ?? 0.3;
 
 		// Set boundary properties if provided.
 		this.boundary = physicsOptions?.boundary;
@@ -143,8 +146,8 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 
 		if ( collisionResult.normal.y > 0 ) {
 
-			// Player is grounded.
 			this._isGrounded = true;
+			this.velocity.y = 0;
 
 		}
 
@@ -167,7 +170,13 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 		this._ray.origin.copy( this._capsuleCollider.start ).y -= this._capsuleCollider.radius;
 		const rayResult = this._worldOctree.rayIntersect( this._ray );
 
-		if ( rayResult.distance / - this._deltaVelocity.y < this.landTimeThreshold ) {
+		const t1 = Math.min( ( this.maxFallSpeed + this.velocity.y ) / this.gravity, this.landTimeThreshold );
+		const d1 = ( - this.velocity.y + 0.5 * this.gravity * t1 ) * t1;
+
+		const t2 = this.landTimeThreshold - t1;
+		const d2 = this.maxFallSpeed * t2;
+
+		if ( this.landTolerance < rayResult.distance && rayResult.distance < d1 + d2 ) {
 
 			this._isLanding = true;
 
@@ -225,7 +234,8 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 
 			}
 
-			this.velocity.addScaledVector( this.velocity, damping );
+			this.velocity.x += this.velocity.x * damping;
+			this.velocity.z += this.velocity.z * damping;
 
 			this._deltaVelocity.copy( this.velocity ).multiplyScalar( stepDelta );
 			this.collider.translate( this._deltaVelocity );
