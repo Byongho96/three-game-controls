@@ -1,130 +1,187 @@
 import {
 	AnimationAction,
-	AnimationClip,
 	AnimationMixer,
-	AnimationObjectGroup,
+	Box3,
 	LoopOnce,
-	Object3D,
-	Quaternion,
+	OrthographicCamera,
+	PerspectiveCamera,
+	Spherical,
 	Vector3,
+	type AnimationClip,
+	type Camera,
+	type Object3D,
 } from 'three';
-import { PhysicsControls, PhysicsOptions } from './PhysicsControls';
+import { FirstPersonControls } from './FirstPersonControls';
 
-/**
- * Animation states that can be used.
- */
-type Animations =
-  | 'idle'
-  | 'forward'
-  | 'backward'
-  | 'rightward'
-  | 'leftward'
-  | 'runForward'
-  | 'runBackward'
-  | 'runRightward'
-  | 'runLeftward'
-  | 'jumpUp'
-  | 'jumpDown'
-  | 'fall';
+type Animation = 'IDLE' | 'MOVE_FORWARD' | 'RUN_FORWARD' | 'MOVE_BACKWARD' | 'RUN_BACKWARD' | 'MOVE_LEFTWARD' | 'RUN_LEFTWARD' | 'MOVE_RIGHTWARD' | 'RUN_RIGHTWARD' | 'JUMP_UP' | 'LAND' | 'FALL';
 
-/**
- * Configuration for animations and their options.
- */
-export type AnimationOptions = {
-  animationClips?: Partial<Record<Animations, AnimationClip>>;
-  transitionTime?: number;
-  transitionDelay?: number;
-  fallSpeedThreshold?: number;
-  moveSpeedThreshold?: number;
-  runSpeedThreshold?: number;
-};
+export type AnimationClips = Partial<Record<Animation, AnimationClip>>;
 
-class PhysicsCharacterControls extends PhysicsControls {
+const _worldYDirection = new Vector3( 0, 1, 0 );
+class ThirdPersonControls extends FirstPersonControls {
 
-	private _mixer: AnimationMixer;
-	private _objectGroup: AnimationObjectGroup;
+	// Animation mixer for the object
+	private _animationMixer: AnimationMixer;
+
+	// Animation clips
 	private _animationClips: Record<string, AnimationClip> = {};
+
+	// Animation actions synced with the clips
 	private _animationActions: Record<string, AnimationAction> = {};
 
-	// Animation options
-	transitionTime: number;
-	transitionDelay: number;
-	fallSpeedThreshold: number;
-	moveSpeedThreshold: number;
-	runSpeedThreshold: number;
+	// Override the eye height  of FirstPersonControls
+	eyeHeight: number = 0;
 
-	private _localVelocity: Vector3 = new Vector3();
-	private _worldQuaternion: Quaternion = new Quaternion();
-	private _currentAction: AnimationAction | null = null;
+	/** Time for transitioning between animations. */
+	transitionTime: number = 0.3;
 
+	/** Delay for transitioning between animations. */
+	transitionDelay: number = 0.3;
+
+	/** Speed threshold to trigger the falling animation. */
+	fallSpeedThreshold: number = 15;
+
+	/** Speed threshold to trigger the moving animation. */
+	moveSpeedThreshold: number = 1;
+
+	/** Speed threshold to trigger running animations. */
+	runSpeedThreshold: number = 10;
+
+	/** The camera used for third-person perspective. */
+	camera: Camera | null;
+
+	/** Offset for the camera position relative to the object. */
+	cameraPositionOffset: Vector3;
+
+	/** Offset for the camera look-at position relative to the object. */
+	cameraLookAtOffset: Vector3;
+
+	/** Lerp factor for smooth camera transitions.
+	 * @default 0.2
+	 */
+	cameraLerpFactor: number = 0.2;
+
+	/** Whether to rotate the object towards the moving direction.
+	 * @default true
+	 */
+	enableRotationOnMove: boolean = true;
+
+
+	/** Whether to sync the object's forward axis with the camera.
+	 *
+	 * Possible values:
+	 * - `'ALWAYS'`: The object's forward axis is always synchronized with the camera, regardless of movement.
+	 * - `'MOVE'`: The object's forward axis is synchronized with the camera only when the object is moving.
+	 * - `'NEVER'`: The object's forward axis is not synchronized with the camera.
+	 *
+	 * @default 'move'
+	 */
+	syncAxisWithCamera : 'ALWAYS' | 'MOVE' | 'NEVER' = 'MOVE';
+
+	/* Spherical coordinates for camera position.
+	 * @default `new THREE.Spherical()`
+	 */
+	protected _spherical: Spherical = new Spherical();
+
+
+	// Internals
+	private _forwardDirection: Vector3 = new Vector3();
+	private _objectLocalVelocity: Vector3 = new Vector3();
+	private _objectLookAtPosition: Vector3 = new Vector3();
+	private _movementDirection: Vector3 = new Vector3();
+
+	private _currentActionKey: Animation | null = null;
+
+	private _cameraLookAtPosition: Vector3 = new Vector3();
+	private _cameraOffsetPosition: Vector3 = new Vector3();
+
+	/**
+	 * Constructs a new ThirdPersonControls instance.
+	 * @param object - The character object to control.
+	 * @param domElement - The HTML element for capturing input events.
+	 * @param world - The world object used for collision detection.
+	 * @param animationClips - The animation clips for the character.
+	 * @param camera - The camera to use for third-person perspective.
+	 */
 	constructor(
 		object: Object3D,
-		domElement: HTMLElement | null,
-		world: Object3D,
-		animationOptions: AnimationOptions = {},
-		physicsOptions: PhysicsOptions = {},
+		domElement: HTMLElement | null = null,
+		world: Object3D | null = null,
+		animationClips : AnimationClips = {},
+		camera: Camera | null = null,
 	) {
 
-		super( object, domElement, world, physicsOptions );
+		super( object, domElement, world );
 
-		this._objectGroup = new AnimationObjectGroup( object );
-		this._mixer = new AnimationMixer( this._objectGroup );
+		this._animationMixer = new AnimationMixer( this.object );
 
-		if ( animationOptions.animationClips ) {
+		Object.entries( animationClips ).forEach( ( [ key, clip ] ) => {
 
-			Object.entries( animationOptions.animationClips ).forEach( ( [ key, clip ] ) => {
+			this.setAnimationClip( key, clip );
 
-				this.setAnimationClip( key, clip );
+		} );
 
-			} );
+		this.camera = camera;
 
-		}
+		// Set the camera position and look-at offsets based on the object size.
+		const objectSize = new Vector3();
+		new Box3().setFromObject( this.object ).getSize( objectSize );
 
-		this.transitionTime = animationOptions.transitionTime ?? 0.3;
-		this.transitionDelay = animationOptions.transitionDelay ?? 0.3;
-		this.fallSpeedThreshold = animationOptions.fallSpeedThreshold ?? 15;
-		this.moveSpeedThreshold = animationOptions.moveSpeedThreshold ?? 1;
-		this.runSpeedThreshold = animationOptions.runSpeedThreshold ?? 5;
+		this.cameraPositionOffset = new Vector3( 0, objectSize.y * 1.5, - objectSize.y * 1.5 );
+		this.cameraLookAtOffset = new Vector3( 0, objectSize.y * 0.8, 0 );
+
+		// Set the spherical coordinates.
+		const subVector = this.cameraPositionOffset.clone().sub( this.cameraLookAtOffset );
+		this._spherical.setFromVector3( subVector );
+
+		this.collider.radius = objectSize.y / 4;
+		this.collider.length = objectSize.y / 2;
 
 	}
 
+
 	/**
-   * Returns a read-only copy of the animation clips.
-   */
-	get clips() {
+	 * Gets a frozen copy of the animation clips.
+	 */
+	get animationClips(): Readonly<Record<string, AnimationClip>> {
 
 		return Object.freeze( { ...this._animationClips } );
 
 	}
 
 	/**
-   * Adds an object to the animation object group.
-   * @param object - The Object3D to add.
-   */
-	addObject( object: Object3D ) {
+	 * Returns the forward direction vector of the object.
+	 * @param target - The result will be copied into this vector.
+	 */
+	getForwardVector( target: Vector3 ): Vector3 {
 
-		this._objectGroup.add( object );
-
-	}
-
-	/**
-   * Removes an object from the animation object group.
-   * @param object - The Object3D to remove.
-   */
-	removeObject( object: Object3D ) {
-
-		this._objectGroup.remove( object );
+		target.copy( this._forwardDirection );
+		return target;
 
 	}
 
 	/**
-   * Adds an animation clip and its corresponding action.
-   * @param key - The identifier for the animation clip.
-   * @param clip - The AnimationClip to add.
-   */
-	setAnimationClip( key: string, clip: AnimationClip ) {
+		 * Returns the right direction vector of the object.
+		 * @param target - The result will be copied into this vector.
+		 */
+	getRightwardVector( target: Vector3 ): Vector3 {
 
-		const action = this._mixer.clipAction( clip );
+		target.copy( this._forwardDirection );
+		target.cross( _worldYDirection );
+		target.normalize();
+		return target;
+
+	}
+
+
+	/**
+	 * Sets an animation clip for a given key.
+	 * @param key - The key to associate with the animation clip.
+	 * @param clip - The animation clip.
+	 */
+	setAnimationClip( key: string, clip: AnimationClip ): void {
+
+		const action = this._animationMixer.clipAction( clip );
 
 		this._animationClips[ key ] = clip;
 		this._animationActions[ key ] = action;
@@ -132,50 +189,54 @@ class PhysicsCharacterControls extends PhysicsControls {
 	}
 
 	/**
-   * Removes an animation clip and its corresponding action.
-   * @param key - The identifier for the animation clip to remove.
-   */
-	removeAnimationClip( key: string ) {
+	 * Deletes an animation clip associated with a given key.
+	 * @param key - The key of the animation clip to delete.
+	 */
+	deleteAnimationClip( key: string ): void {
 
 		const clip = this._animationClips[ key ];
-		if ( ! clip ) return;
-
 		const action = this._animationActions[ key ];
+
 		if ( action ) {
 
 			action.stop();
-			this._mixer.uncacheAction( clip, this._objectGroup );
+			this._animationMixer.uncacheAction( clip, this.object );
+			delete this._animationActions[ key ];
 
 		}
 
-		this._mixer.uncacheClip( clip );
+		if ( clip ) {
 
-		delete this._animationClips[ key ];
-		delete this._animationActions[ key ];
+			this._animationMixer.uncacheClip( clip );
+			delete this._animationClips[ key ];
+
+		}
 
 	}
 
 	/**
-   * Smoothly transitions to the specified animation action over a given duration.
-   * @param key - The identifier for the animation action to transition to.
-   * @param duration - The duration of the transition in seconds.
-   * @param isOnce - (Optional) If true, the animation will play only once and stop at the last frame.
-   */
-	private _fadeToAction( key: string, duration: number, isOnce?: boolean ) {
+	 * Gets the animation action associated with a given key.
+	 * @param key - The key of the animation action to retrieve.
+	 */
+	getAnimationAction( key: string ): AnimationAction | undefined {
+
+		return this._animationActions[ key ];
+
+	}
+
+	// Fades to a new animation action
+	private _fadeToAction( key: Animation, duration: number, isOnce?: boolean ): void {
+
+		if ( key === this._currentActionKey ) return;
 
 		const action = this._animationActions[ key ];
-		if ( ! action || action === this._currentAction ) return;
+		if ( ! action ) return;
 
-		// Fade out all current actions
-		Object.values( this._animationActions ).forEach( currentAction => {
+		const currentAction = this._currentActionKey ? this._animationActions[ this._currentActionKey ] : null;
+		if ( currentAction ) currentAction.fadeOut( duration );
 
-			currentAction.fadeOut( duration );
+		action.reset();
 
-		} );
-
-		this._currentAction = action;
-
-		action.reset(); // Reset the action to start from the beginning
 		if ( isOnce ) {
 
 			action.setLoop( LoopOnce, 1 );
@@ -184,116 +245,224 @@ class PhysicsCharacterControls extends PhysicsControls {
 		}
 
 		action.fadeIn( duration );
-		action.play(); // Play the action
+		action.play();
+
+		this._currentActionKey = key;
 
 	}
 
-	/**
-   * Updates the animation based on the current state of the player.
-   */
-	private _updateAnimation() {
+	private _syncForwardDirection(): void {
 
-		const worldQuaternion = this.object.getWorldQuaternion( this._worldQuaternion );
-		this._localVelocity.copy( this.velocity ).applyQuaternion( worldQuaternion.invert() );
 
-		if ( this.velocity.y > 0 ) {
+		if ( ! this.camera ) return;
 
-			return this._fadeToAction( 'jumpUp', this.transitionTime, true );
+		if ( this.syncAxisWithCamera === 'ALWAYS' ) {
 
-		}
-
-		if ( this.isLanding ) {
-
-			return this._fadeToAction( 'jumpDown', this.transitionTime, true );
+			this.camera.getWorldDirection( this._forwardDirection );
+			this._forwardDirection.y = 0;
+			return;
 
 		}
 
-		if ( this.isGrounded && this._localVelocity.z > this.runSpeedThreshold && this._animationActions.runForward ) {
+		if (
+			this.syncAxisWithCamera === 'MOVE' &&
+			( this.actionStates.MOVE_FORWARD || this.actionStates.MOVE_BACKWARD || this.actionStates.MOVE_LEFTWARD || this.actionStates.MOVE_RIGHTWARD )
+		) {
 
-			return this._fadeToAction( 'runForward', this.transitionTime );
-
-		}
-
-		if ( this.isGrounded && this._localVelocity.z > this.moveSpeedThreshold ) {
-
-			return this._fadeToAction( 'forward', this.transitionTime );
-
-		}
-
-		if ( this.isGrounded && this._localVelocity.z < - this.runSpeedThreshold && this._animationActions.runBackward ) {
-
-			return this._fadeToAction( 'runBackward', this.transitionTime );
-
-		}
-
-		if ( this.isGrounded && this._localVelocity.z < - this.moveSpeedThreshold ) {
-
-			return this._fadeToAction( 'backward', this.transitionTime );
-
-		}
-
-		if ( this.isGrounded && this._localVelocity.x > this.runSpeedThreshold && this._animationActions.runLeftward ) {
-
-			return this._fadeToAction( 'runLeftward', this.transitionTime );
-
-		}
-
-		if ( this.isGrounded && this._localVelocity.x > this.moveSpeedThreshold ) {
-
-			return this._fadeToAction( 'leftward', this.transitionTime );
-
-		}
-
-		if ( this.isGrounded && this._localVelocity.x < - this.runSpeedThreshold && this._animationActions.runRightward ) {
-
-			return this._fadeToAction( 'runRightward', this.transitionTime );
-
-		}
-
-		if ( this.isGrounded && this._localVelocity.x < - this.moveSpeedThreshold ) {
-
-			return this._fadeToAction( 'rightward', this.transitionTime );
-
-		}
-
-		if ( ! this.isLanding && this.velocity.y < - this.fallSpeedThreshold ) {
-
-			return this._fadeToAction( 'fall', this.transitionTime );
-
-		}
-
-		if ( this.isGrounded ) {
-
-			return this._fadeToAction( 'idle', this.transitionTime );
+			this.camera.getWorldDirection( this._forwardDirection );
+			this._forwardDirection.y = 0;
+			return;
 
 		}
 
 	}
 
+	private _lerpCameraPosition( ): void {
+
+		if ( ! this.camera ) return;
+
+		this._spherical.radius = this.cameraPositionOffset.distanceTo( this.cameraLookAtOffset );
+
+		this.object.getWorldPosition( this._cameraLookAtPosition ).add( this.cameraLookAtOffset );
+		this._cameraOffsetPosition.setFromSpherical( this._spherical ).add( this._cameraLookAtPosition );
+
+		this.camera.position.lerp( this._cameraOffsetPosition, this.cameraLerpFactor );
+		this.camera.lookAt( this._cameraLookAtPosition );
+
+		this.camera.updateMatrixWorld();
+
+	}
+
+	// Updates the animation based on the character's state
+	private _updateAnimation( ): void {
+
+		this.getLocalVelocity( this._objectLocalVelocity );
+
+		if ( this._objectLocalVelocity.y > 0 && this._animationActions.JUMP_UP ) {
+
+			return this._fadeToAction( 'JUMP_UP', this.transitionTime, true );
+
+		}
+
+		if ( this.isLanding && this._animationActions.LAND ) {
+
+			return this._fadeToAction( 'LAND', this.transitionTime, true );
+
+		}
+
+		if ( this.velocity.y < - this.fallSpeedThreshold && this._currentActionKey !== 'LAND' && this._animationActions.FALL ) {
+
+			return this._fadeToAction( 'FALL', this.transitionTime );
+
+		}
+
+		if ( ! this.isGrounded ) {
+
+			return;
+
+		}
+
+		if ( this._objectLocalVelocity.z > this.runSpeedThreshold && this._animationActions.RUN_FORWARD ) {
+
+			return this._fadeToAction( 'RUN_FORWARD', this.transitionTime );
+
+		}
+
+		if ( this._objectLocalVelocity.z > this.moveSpeedThreshold && this._animationActions.MOVE_FORWARD ) {
+
+			return this._fadeToAction( 'MOVE_FORWARD', this.transitionTime );
+
+		}
+
+		if ( this._objectLocalVelocity.z < - this.runSpeedThreshold && this._animationActions.RUN_BACKWARD ) {
+
+			return this._fadeToAction( 'RUN_BACKWARD', this.transitionTime );
+
+		}
+
+		if ( this._objectLocalVelocity.z < - this.moveSpeedThreshold && this._animationActions.MOVE_BACKWARD ) {
+
+			return this._fadeToAction( 'MOVE_BACKWARD', this.transitionTime );
+
+		}
+
+		if ( this._objectLocalVelocity.x < - this.runSpeedThreshold && this._animationActions.RUN_RIGHTWARD ) {
+
+			return this._fadeToAction( 'RUN_RIGHTWARD', this.transitionTime );
+
+		}
+
+		if ( this._objectLocalVelocity.x < - this.moveSpeedThreshold && this._animationActions.MOVE_RIGHTWARD ) {
+
+			return this._fadeToAction( 'MOVE_RIGHTWARD', this.transitionTime );
+
+		}
+
+		if ( this._objectLocalVelocity.x > this.runSpeedThreshold && this._animationActions.RUN_LEFTWARD ) {
+
+			return this._fadeToAction( 'RUN_LEFTWARD', this.transitionTime );
+
+		}
+
+		if ( this._objectLocalVelocity.x > this.moveSpeedThreshold && this._animationActions.MOVE_LEFTWARD ) {
+
+			return this._fadeToAction( 'MOVE_LEFTWARD', this.transitionTime );
+
+		}
+
+
+		return this._fadeToAction( 'IDLE', this.transitionTime );
+
+	}
+
+
+	protected _updateMovement( delta: number ): void {
+
+		super._updateMovement( delta );
+
+		this._movementDirection.copy( this.velocity );
+		this._movementDirection.y = 0;
+
+		if ( this._movementDirection.length() > 1e-10 && this.enableRotationOnMove ) {
+
+			this.object.getWorldPosition( this._objectLookAtPosition );
+			this._objectLookAtPosition.add( this._movementDirection );
+			this.object.lookAt( this._objectLookAtPosition );
+
+		}
+
+	}
+
+	protected _updateRotation( delta: number ): void {
+
+		const deltaSpeed = this.rotateSpeed * delta;
+
+		if ( this.actionStates.ROTATE_UP	) this._spherical.phi += this.actionStates.ROTATE_UP * deltaSpeed;
+
+		if ( this.actionStates.ROTATE_DOWN ) this._spherical.phi -= this.actionStates.ROTATE_DOWN * deltaSpeed;
+
+		if ( this.actionStates.ROTATE_RIGHT )	this._spherical.theta -= this.actionStates.ROTATE_RIGHT * deltaSpeed;
+
+		if ( this.actionStates.ROTATE_LEFT ) this._spherical.theta += this.actionStates.ROTATE_LEFT * deltaSpeed;
+
+		this._spherical.makeSafe();
+
+	}
+
 	/**
-   * Updates the _mixer with the given delta time.
-   * @param delta - The time increment in seconds.
-   */
-	update( delta: number ) {
+	 * Updates the character's state, including physics and animations.
+	 * @param delta - The time elapsed since the last update (sec).
+	 */
+	update( delta: number ): void {
 
 		super.update( delta );
 
 		this._updateAnimation();
 
-		this._mixer.update( delta );
+		this._animationMixer.update( delta );
+
+		this._syncForwardDirection();
+
+		this._lerpCameraPosition();
 
 	}
 
 	/**
-   * Stops all actions and disposes of the _mixer.
-   */
-	dispose() {
+	 * Disposes of the character controls, cleaning up animations and resources.
+	 */
+	dispose(): void {
 
-		this._mixer.stopAllAction();
-		this._mixer.uncacheRoot( this._objectGroup );
+		super.dispose();
+
+		this._animationMixer.stopAllAction();
+		this._animationMixer.uncacheRoot( this.object );
 
 	}
 
+	// Handles the mouse wheel event for zooming the camera.
+	protected _onMouseWheel( event: WheelEvent ): void {
+
+		if ( ! this.enableZoom ) return;
+
+		if ( ! ( this.camera instanceof PerspectiveCamera ) && ! ( this.camera instanceof OrthographicCamera ) ) {
+
+			console.warn( 'WARNING: FirstPersonControls.js encountered an unknown camera type - dolly/zoom disabled.' );
+			this.enableZoom = false;
+
+			return;
+
+		}
+
+		const normalizedDelta = Math.pow( 0.95, this.zoomSpeed * Math.abs( event.deltaY * 0.01 ) );
+
+		if ( event.deltaY > 0 ) this.camera.zoom *= normalizedDelta;
+		else if ( event.deltaY < 0 ) this.camera.zoom /= normalizedDelta;
+
+		this.camera.updateProjectionMatrix();
+
+	}
+
+
 }
 
-export default PhysicsCharacterControls;
+export { ThirdPersonControls };
