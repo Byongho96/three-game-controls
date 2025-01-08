@@ -168,7 +168,6 @@ class ThirdPersonControls extends FirstPersonControls {
 
 		target.copy( this._forwardDirection );
 		target.cross( _worldYDirection );
-		target.normalize();
 		return target;
 
 	}
@@ -253,24 +252,22 @@ class ThirdPersonControls extends FirstPersonControls {
 
 	protected _syncForwardDirection(): void {
 
-
 		if ( ! this.camera ) return;
 
-		if ( this.syncAxisWithCamera === 'ALWAYS' ) {
+		if ( this.syncAxisWithCamera === 'NEVER' ) return;
 
+		if ( this.syncAxisWithCamera === 'ALWAYS' || this.actionStates.MOVE_FORWARD || this.actionStates.MOVE_BACKWARD || this.actionStates.MOVE_LEFTWARD || this.actionStates.MOVE_RIGHTWARD ) {
+
+			// sync the forward direction
 			this.camera.getWorldDirection( this._forwardDirection );
 			this._forwardDirection.y = 0;
-			return;
+			this._forwardDirection.normalize();
 
-		}
+			// rotate the object towards the forward direction
+			this.object.getWorldPosition( this._objectLookAtPosition );
+			this._objectLookAtPosition.add( this._forwardDirection );
+			this.object.lookAt( this._objectLookAtPosition );
 
-		if (
-			this.syncAxisWithCamera === 'MOVE' &&
-			( this.actionStates.MOVE_FORWARD || this.actionStates.MOVE_BACKWARD || this.actionStates.MOVE_LEFTWARD || this.actionStates.MOVE_RIGHTWARD )
-		) {
-
-			this.camera.getWorldDirection( this._forwardDirection );
-			this._forwardDirection.y = 0;
 			return;
 
 		}
