@@ -225,7 +225,7 @@ class ThirdPersonControls extends FirstPersonControls {
 	}
 
 	// Fades to a new animation action
-	private _fadeToAction( key: Animation, duration: number, isOnce?: boolean ): void {
+	protected _fadeToAction( key: Animation, duration: number, isOnce?: boolean ): void {
 
 		if ( key === this._currentActionKey ) return;
 
@@ -251,7 +251,7 @@ class ThirdPersonControls extends FirstPersonControls {
 
 	}
 
-	private _syncForwardDirection(): void {
+	protected _syncForwardDirection(): void {
 
 
 		if ( ! this.camera ) return;
@@ -277,7 +277,7 @@ class ThirdPersonControls extends FirstPersonControls {
 
 	}
 
-	private _lerpCameraPosition( ): void {
+	protected _lerpCameraPosition( ): void {
 
 		if ( ! this.camera ) return;
 
@@ -294,7 +294,7 @@ class ThirdPersonControls extends FirstPersonControls {
 	}
 
 	// Updates the animation based on the character's state
-	private _updateAnimation( ): void {
+	protected _updateAnimation( ): void {
 
 		this.getLocalVelocity( this._objectLocalVelocity );
 
@@ -461,7 +461,6 @@ class ThirdPersonControls extends FirstPersonControls {
 		this.camera.updateProjectionMatrix();
 
 	}
-
 
 }
 

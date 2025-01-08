@@ -87,8 +87,6 @@ class FirstPersonControls extends PhysicsControls {
 		this.collider.radius = this.eyeHeight / 4;
 		this.collider.length = this.eyeHeight / 2;
 
-		console.log( this.collider, this.eyeHeight );
-
 		this.connect();
 
 	}

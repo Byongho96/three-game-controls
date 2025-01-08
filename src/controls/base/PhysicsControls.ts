@@ -172,7 +172,7 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 
 
 	// Check for collisions and translate the collider.
-	private _checkCollisions(): void {
+	protected _checkCollisions(): void {
 
 		this._isGrounded = false;
 
@@ -182,7 +182,6 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 
 		if ( collisionResult.normal.y > 0 ) {
 
-			console.log( 'collide' );
 			this._isGrounded = true;
 			this.velocity.y = 0;
 
@@ -198,7 +197,7 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 	}
 
 	// Check if the object is landing based on the landTimeThreshold.
-	private _checkIsLanding(): void {
+	protected _checkIsLanding(): void {
 
 		this._isLanding = false;
 
@@ -222,7 +221,7 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 	}
 
 	// Teleport the player back to the reset point if it's out of the boundary.
-	private _teleportPlayerIfOutOfBounds(): void {
+	protected _teleportPlayerIfOutOfBounds(): void {
 
 		const { x: px, y: py, z: pz } = this.object.getWorldPosition( this._objectWorldPosition );
 
