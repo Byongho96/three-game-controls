@@ -1,10 +1,10 @@
 import { type FirstPersonControls, type Action } from '../controls/base/FirstPersonControls';
 
-export interface HasDragMethod {
+export interface HasKeyboardMethod {
 	keyToActions: Record<string, Action[]>
 }
 
-function KeyboardMixin<T extends Constructor<FirstPersonControls>>( Base: T ): Constructor<HasDragMethod> & T {
+function KeyboardMixin<T extends Constructor<FirstPersonControls>>( Base: T ): Constructor<HasKeyboardMethod> & T {
 
 	return class KeyboardMixin extends Base {
 

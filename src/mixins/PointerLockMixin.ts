@@ -1,6 +1,6 @@
 import { type FirstPersonControls, type Action } from '../controls/base/FirstPersonControls';
 
-export interface HasDragMethod {
+export interface HasPointerLockMethod {
 	pointerLockXActions: Action[],
 	pointerLockYActions: Action[],
 
@@ -8,7 +8,7 @@ export interface HasDragMethod {
 	enablePointerLockDamping: boolean,
 }
 
-function PointerLockMixin<T extends Constructor<FirstPersonControls>>( Base: T ): Constructor<HasDragMethod> & T {
+function PointerLockMixin<T extends Constructor<FirstPersonControls>>( Base: T ): Constructor<HasPointerLockMethod> & T {
 
 	return class PointerLockMixin extends Base {
 
