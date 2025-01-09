@@ -258,16 +258,36 @@ class ThirdPersonControls extends FirstPersonControls {
 
 		if ( this.syncAxisWithCamera === 'ALWAYS' || this.actionStates.MOVE_FORWARD || this.actionStates.MOVE_BACKWARD || this.actionStates.MOVE_LEFTWARD || this.actionStates.MOVE_RIGHTWARD ) {
 
-			// sync the forward direction
 			this.camera.getWorldDirection( this._forwardDirection );
 			this._forwardDirection.y = 0;
 			this._forwardDirection.normalize();
 
-			// rotate the object towards the forward direction
-			this.object.getWorldPosition( this._objectLookAtPosition );
+			return;
+
+		}
+
+	}
+
+	protected _updateObjectDirection() {
+
+		this._movementDirection.copy( this.velocity );
+		this._movementDirection.y = 0;
+		this.object.getWorldPosition( this._objectLookAtPosition );
+
+		// rotate on move
+		if ( this._movementDirection.length() > 1e-2 && this.enableRotationOnMove ) {
+
+			this._objectLookAtPosition.add( this._movementDirection );
+			this.object.lookAt( this._objectLookAtPosition );
+			return;
+
+		}
+
+		// rotate by sync
+		if ( this.syncAxisWithCamera === 'ALWAYS' || this._movementDirection.length() > 1e-2 ) {
+
 			this._objectLookAtPosition.add( this._forwardDirection );
 			this.object.lookAt( this._objectLookAtPosition );
-
 			return;
 
 		}
@@ -373,23 +393,6 @@ class ThirdPersonControls extends FirstPersonControls {
 	}
 
 
-	protected _updateMovement( delta: number ): void {
-
-		super._updateMovement( delta );
-
-		this._movementDirection.copy( this.velocity );
-		this._movementDirection.y = 0;
-
-		if ( this._movementDirection.length() > 1e-10 && this.enableRotationOnMove ) {
-
-			this.object.getWorldPosition( this._objectLookAtPosition );
-			this._objectLookAtPosition.add( this._movementDirection );
-			this.object.lookAt( this._objectLookAtPosition );
-
-		}
-
-	}
-
 	protected _updateRotation( delta: number ): void {
 
 		const deltaSpeed = this.rotateSpeed * delta;
@@ -419,6 +422,8 @@ class ThirdPersonControls extends FirstPersonControls {
 		this._animationMixer.update( delta );
 
 		this._syncForwardDirection();
+
+		this._updateObjectDirection();
 
 		this._lerpCameraPosition();
 
