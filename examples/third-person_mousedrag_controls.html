@@ -16,7 +16,7 @@
 		<script type="importmap">
 			{
 				"imports": {
-					"physics-character-controls": "../dist/bundle.esm.js",
+					"three-game-controls": "../dist/bundle.esm.js",
 					"three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
 					"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"
 				}
@@ -30,7 +30,7 @@
 
 			import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-			import { TPKeyboardDragControls, PhysicsControlsHelper } from 'physics-character-controls';
+			import { TPKeyboardDragControls, PhysicsControlsHelper } from 'three-game-controls';
 
 			const container = document.getElementById( 'container' );
 
@@ -44,20 +44,20 @@
 			let helpers;
 
 			Promise.all( [
-				gltfLoader.loadAsync( './assets/models/collision-world.glb' ),
-				gltfLoader.loadAsync( './assets/models/x_bot.glb' ),
-				gltfLoader.loadAsync( './assets/animations/idle.glb' ),
-				gltfLoader.loadAsync( './assets/animations/run_forward.glb' ),
-				gltfLoader.loadAsync( './assets/animations/run_backward.glb' ),
-				gltfLoader.loadAsync( './assets/animations/run_leftward.glb' ),
-				gltfLoader.loadAsync( './assets/animations/run_rightward.glb' ),
-				gltfLoader.loadAsync( './assets/animations/run_forward_fast.glb' ),
-				gltfLoader.loadAsync( './assets/animations/run_backward_fast.glb' ),
-				gltfLoader.loadAsync( './assets/animations/run_leftward_fast.glb' ),
-				gltfLoader.loadAsync( './assets/animations/run_rightward_fast.glb' ),
-				gltfLoader.loadAsync( './assets/animations/jump_up.glb' ),
-				gltfLoader.loadAsync( './assets/animations/jump_down.glb' ),
-				gltfLoader.loadAsync( './assets/animations/fall.glb' ),
+				gltfLoader.loadAsync( '../dist/assets/collision-world.glb' ),
+				gltfLoader.loadAsync( '../dist/assets/x-bot.glb' ),
+				gltfLoader.loadAsync( '../dist/assets/ani-idle.glb' ),
+				gltfLoader.loadAsync( '../dist/assets/ani-forward.glb' ),
+				gltfLoader.loadAsync( '../dist/assets/ani-backward.glb' ),
+				gltfLoader.loadAsync( '../dist/assets/ani-leftward.glb' ),
+				gltfLoader.loadAsync( '../dist/assets/ani-rightward.glb' ),
+				gltfLoader.loadAsync( '../dist/assets/ani-forward-fast.glb' ),
+				gltfLoader.loadAsync( '../dist/assets/ani-backward-fast.glb' ),
+				gltfLoader.loadAsync( '../dist/assets/ani-leftward-fast.glb' ),
+				gltfLoader.loadAsync( '../dist/assets/ani-rightward-fast.glb' ),
+				gltfLoader.loadAsync( '../dist/assets/ani-jump-up.glb' ),
+				gltfLoader.loadAsync( '../dist/assets/ani-land.glb' ),
+				gltfLoader.loadAsync( '../dist/assets/ani-fall.glb' ),
 			] ).then(
 				( [
 					world,
@@ -83,9 +83,9 @@
 
 							child.castShadow = true;
 							child.receiveShadow = true;
-			
+
 						}
-			
+
 					} );
 
 					scene.add( character.scene );
@@ -97,9 +97,9 @@
 
 							child.castShadow = true;
 							child.receiveShadow = true;
-			
+
 						}
-			
+
 					} );
 
 					controls = new TPKeyboardDragControls(
@@ -166,7 +166,7 @@
 					folder4.add( controls, 'runSpeedThreshold', 2, 8 ).name( 'run threshold' ).listen();
 					folder4.add( controls, 'fallSpeedThreshold', 1, 30 ).name( 'fall threshold' ).listen();
 					folder4.add( controls, 'transitionTime', 0, 1 ).name( 'transition time' ).listen();
-			
+
 				},
 			);
 
@@ -260,24 +260,24 @@
 						if ( Array.isArray( object.material ) ) {
 
 							object.material.forEach( material => material.dispose() );
-			
+
 						} else if ( object.material ) {
 
 							object.material.dispose();
-			
+
 						}
-			
+
 					}
-			
+
 				} );
 
 				// Remove renderer DOM element
 				if ( renderer.domElement && renderer.domElement.parentNode ) {
 
 					renderer.domElement.parentNode.removeChild( renderer.domElement );
-			
+
 				}
-			
+
 			}
 
 			window.addEventListener( 'beforeunload', dispose );

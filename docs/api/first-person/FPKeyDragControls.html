@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <base href="../../" />
+    <script src="page.js"></script>
+    <link type="text/css" rel="stylesheet" href="page.css" />
+  </head>
+  <body>
+    [page:FirstPersonControls] &rarr;
+
+    <h1>[name]</h1>
+
+    <p class="desc">
+      First-person controls operable via keyboard and mouse drag.
+    </p>
+
+    <h2>Examples</h2>
+
+    <p>[example:first-person_mousedrag_controls first-person / mousedrag / controls ]</p>
+
+    <h2>Constructor</h2>
+
+		<h3>[name]( [3param:https://threejs.org/docs/#api/en/cameras/Camera object], [param:HTMLDOMElement domElement], [3param:https://threejs.org/docs/#api/en/core/Object3D world] )</h3>
+		<p>
+			[3page:https://threejs.org/docs/#api/en/cameras/Camera object] — The camera to be controlled.<br/>
+			[page:HTMLDOMElement domElement] — The HTML element for event listeners.<br/>
+			[3page:https://threejs.org/docs/#api/en/core/Object3D world] — The `Object3D` used to build the collision octree.<br/>
+		</p>
+
+		<h2>Mixins</h2>
+
+		<h3>[page:KeyboardMixin KeyboardMixin]</h3>
+
+		<p>
+			Provide Keyboard API for controlling the object.<br/>
+			`keyToActions` is overwritten:
+		</p>
+
+		<h3>[page:DragMixin DragMixin]</h3>
+
+		<p>
+			Provide mouse-drag API for controlling the object.<br/>
+		</p>
+
+		<h2>Source</h2>
+
+    <p>
+			[link:https://github.com/Byongho96/three-game-controls/blob/master/src/controls/FPKeyboardControls.ts controls/FPKeyboardControls.ts]
+    </p>
+  </body>
+</html>

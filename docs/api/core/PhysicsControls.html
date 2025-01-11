@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<base href="../../" />
+		<script src="page.js"></script>
+		<link type="text/css" rel="stylesheet" href="page.css" />
+	</head>
+	<body>
+		[3page:https://threejs.org/docs/#api/en/extras/Controls Controls] &rarr;
+
+		<h1>[name]</h1>
+
+		<p class="desc">
+			PhysicsControls is a controller responsible for simulating physical phenomena.<br/>
+		  It moves objects based on the `velocity` value and simulates gravity, collision detection, friction.
+		</p>
+
+		<h2>Constructor</h2>
+
+		<h3>[name]( [3param:https://threejs.org/docs/#api/en/core/Object3D object], [param:HTMLDOMElement domElement], [3param:https://threejs.org/docs/#api/en/core/Object3D world] )</h3>
+
+		<p>
+			[3page:https://threejs.org/docs/#api/en/core/Object3D object] — The `Object3D` to apply physics controls to.<br/>
+			[page:HTMLDOMElement domElement]</strong> — The HTML element for event listeners.<br/>
+			[3page:https://threejs.org/docs/#api/en/core/Object3D world] — The `Object3D` used to build the collision octree.<br/>
+		</p>
+
+		<h2>Properties</h2>
+	
+		<h3>[property:Collider collider]</h3>
+		<p>
+			The collider used for collision detection. Default is `new Collider()`.
+		</p>
+
+		<h3>[property:Number gravity]</h3>
+		<p>
+			The gravitational force applied to the object. Default is `30`.
+		</p>
+
+		<h3>[property:boolean isGrounded]</h3>
+		<p>
+			(Read-only) Whether the object is currently grounded.
+		</p>
+
+		<h3>[property:boolean isLanding]</h3>
+		<p>
+			(Read-only) Whether the object is currently landing.
+		</p>
+
+		<h3>[property:Number landTimeThreshold]</h3>
+		<p>
+			The time threshold in seconds for determining if the object is landing. Default is `0.3`.
+		</p>
+
+		<h3>[property:Number landTolerance]</h3>
+		<p>
+			The distance tolerance for landing detection, measured as the vertical distance from the ground surface. Default is `0.2`.
+		</p>
+
+		<h3>[property:Number maxFallSpeed]</h3>
+		<p>
+			The maximum fall speed of the object. Default is `20`.
+		</p>
+
+		<h3>[property:Number maxXBoundary]</h3>
+		<p>
+			The boundary limits for the object. Defaults is `Infinity`.
+		</p>
+
+		<h3>[property:Number maxYBoundary]</h3>
+		<p>
+			The boundary limits for the object. Defaults is `Infinity`.
+		</p>
+
+		<h3>[property:Number maxZBoundary]</h3>
+		<p>
+			The boundary limits for the object. Defaults is `Infinity`.
+		</p>
+
+		<h3>[property:Number minXBoundary]</h3>
+		<p>
+			The boundary limits for the object. Defaults is `Infinity`.
+		</p>
+
+		<h3>[property:Number minYBoundary]</h3>
+		<p>
+			The boundary limits for the object. Defaults is `Infinity`.
+		</p>
+
+		<h3>[property:Number minZBoundary]</h3>
+		<p>
+			The boundary limits for the object. Defaults is `Infinity`.
+		</p>
+
+		<h3>[property:Vector3 resetPoint]</h3>
+		<p>
+			The position to reset the object when it goes out of bounds. Default is `new THREE.Vector3(0, 0, 0)`.
+		</p>
+
+		<h3>[property:Number resistance]</h3>
+		<p>
+			Resistance applied to the object to dampen velocity. Default is `6`.
+		</p>
+
+		<h3>[property:Number step]</h3>
+		<p>
+			The time step for calculating physics. Larger values result in more physics calculations performed per unit of time. Default is `5`.
+		</p>
+
+		<h3>[property:Vector3 velocity]</h3>
+		<p>
+			The velocity vector of the object. Default is `new THREE.Vector3(0, 0, 0)`.
+		</p>
+
+		<h3>[property:Object3D world]</h3>
+		<p>
+			The current world object used to build the collision octree.
+		</p>
+
+		<h3>[3property:https://github.com/mrdoob/three.js/blob/dev/examples/jsm/math/Octree.js worldOctree]</h3>
+		<p>
+			The octree structure of the world object used for collision detection.
+		</p>
+
+		<h2>Methods</h2>
+
+		<h3>[3method:https://threejs.org/docs/#api/en/math/Vector getLocalVelocity]( [3param:https://threejs.org/docs/#api/en/math/Vector3 target] )</h3>
+		<p>
+			[3page:https://threejs.org/docs/#api/en/math/Vector3 target] — the result will be copied into this Vector3.
+			<br /><br />
+			Returns the velocity into the object's local coordinate system.
+		</p>
+
+		<h3>[method:undefined update]( [param:Number delta] )</h3>
+		<p>
+			Update the controls. The `delta` is the time elapsed since the last update (in seconds).
+		</p>
+
+		<h2>Events</h2>
+
+		<h3>collide</h3>
+		<p>
+			Fires when the collider has collided with the world. The event object includes:
+		</p>
+		<ul>
+			<li><strong>type</strong>: `'collide'`</li>
+			<li><strong>normal</strong>: A `Vector3` representing the collision normal.</li>
+		</ul>
+
+		<h2>Source</h2>
+
+		<p>[link:https://github.com/Byongho96/three-game-controls/blob/master/src/controls/core/PhysicsControls.ts controls/core/PhysicsControls.ts]</p>
+	</body>
+</html>

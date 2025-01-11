@@ -1,31 +1,44 @@
 {
   "Manual": {
     "Getting Started": {
+      "Overview": "manual/Overview",
       "Installation": "manual/Installation",
-      "Creating a scene": "manual/Creating-a-scene"
+      "Quick Start": "manual/Quick-start",
+      "Customization": "manual/Customization"
     }
   },
 
-  "API": {
-    "Base": {
-      "PhysicsControls": "api/base/PhysicsControls",
-      "PhysicsCharacterControls": "api/base/PhysicsCharacterControls"
+  "API Reference": {
+    "Core": {
+      "PhysicsControls": "api/core/PhysicsControls",
+      "FirstPersonControls": "api/core/FirstPersonControls",
+      "ThirdPersonControls": "api/core/ThirdPersonControls"
     },
 
     "FirstPerson": {
-      "KeyboardControls": "api/FirstPerson/FirstPersonKeyboardControls",
-      "MouseDragControls": "api/FirstPerson/FirstPersonMouseDragControls",
-      "PointerLockControls": "api/FirstPerson/FirstPersonPointerLockControls"
+      "FPKeyboardControls": "api/first-person/FPKeyboardControls",
+      "FPKeyDragControls": "api/first-person/FPKeyDragControls",      
+      "FPKeyPointerLockControls": "api/first-person/FPKeyPointerLockControls"
     },
 
     "ThirdPerson": {
-      "KeyboardControls": "api/ThirdPerson/ThirdPersonKeyboardControls",
-      "MouseDragControls": "api/ThirdPerson/ThirdPersonMouseDragControls",
-      "PointerLockControls": "api/ThirdPerson/ThirdPersonPointerLockControls"
+      "TPKeyboardControls": "api/third-person/TPKeyboardControls",
+      "TPKeyDragControls": "api/third-person/TPKeyDragControls",      
+      "TPKeyPointerLockControls": "api/third-person/TPKeyPointerLockControls"
     },
 
     "Helpers": {
       "PhysicsControlsHelper": "api/helpers/PhysicsControlsHelper"
+    },
+
+    "Math": {
+      "Collider": "api/math/Collider"
+    },
+
+    "Mixins": {
+      "DragMixin": "api/mixins/DragMixin",
+      "KeyboardMixin": "api/mixins/KeyboardMixin",
+      "PointerLockMixin": "api/mixins/PointerLockMixin"
     }
   }
 }

@@ -11,7 +11,7 @@
 	<body>
 		<div id="panel">
 			<div id="header">
-				<h1><a href="/docs">GameControls</a></h1>
+				<h1>GameControls</h1>
 
 				<div id="sections">
 					<span class="selected">docs</span>
@@ -71,14 +71,14 @@
 
 					event.preventDefault();
 					panel.classList.toggle( 'open' );
-			
+
 				};
 
 				panelScrim.onclick = function ( event ) {
 
 					event.preventDefault();
 					panel.classList.toggle( 'open' );
-			
+
 				};
 
 				// Functionality for search/filter input field
@@ -86,7 +86,7 @@
 				filterInput.onfocus = function () {
 
 					panel.classList.add( 'searchFocused' );
-			
+
 				};
 
 				filterInput.onblur = function () {
@@ -94,15 +94,15 @@
 					if ( filterInput.value === '' ) {
 
 						panel.classList.remove( 'searchFocused' );
-			
+
 					}
-			
+
 				};
 
 				filterInput.oninput = function () {
 
 					updateFilter();
-			
+
 				};
 
 				clearSearchButton.onclick = function () {
@@ -110,7 +110,7 @@
 					filterInput.value = '';
 					updateFilter();
 					filterInput.focus();
-			
+
 				};
 
 				// Activate content and title change on browser navigation
@@ -133,13 +133,13 @@
 					panel.classList.add( 'searchFocused' );
 
 					updateFilter();
-			
+
 				} else {
 
 					updateExampleLink( '' );
-			
+
 				}
-			
+
 			}
 
 			// Navigation Panel
@@ -160,15 +160,15 @@
 					content.querySelectorAll( 'a' ).forEach( function ( item ) {
 
 						item.classList.remove( 'selected' );
-			
+
 					} );
 
 					link.classList.add( 'selected' );
-			
+
 				} );
 
 				return link;
-			
+
 			}
 
 			function createNavigation( list ) {
@@ -176,7 +176,7 @@
 				if ( navigation !== undefined ) {
 
 					content.removeChild( navigation );
-			
+
 				}
 
 				// Create the navigation panel using data from list.js
@@ -228,7 +228,7 @@
 							if ( pageURL === selectedPageURL ) {
 
 								linkElement.classList.add( 'selected' );
-			
+
 							}
 
 							// Gather the main properties for the current subpage
@@ -244,17 +244,17 @@
 							// Gather the document titles (used for easy access on browser navigation)
 
 							titles[ pageURL ] = pageName;
-			
+
 						}
 
 						// Gather the category elements for easy access on filtering
 
 						unorderedListElements.push( categoryContent );
-			
+
 					}
-			
+
 				}
-			
+
 			}
 
 			// Filtering
@@ -266,11 +266,11 @@
 				if ( search.indexOf( '?q=' ) !== - 1 ) {
 
 					return decodeURI( search.slice( 3 ) );
-			
+
 				}
 
 				return '';
-			
+
 			}
 
 			function createRegExp( string ) {
@@ -280,7 +280,7 @@
 				string = '(?=.*' + string.split( ' ' ).join( ')(?=.*' ) + ')'; // match all words, in any order
 
 				return new RegExp( string, 'gi' );
-			
+
 			}
 
 			function displayFilteredPanel( regExp ) {
@@ -299,13 +299,13 @@
 						pageName = pageName.replaceAll( regExp, '<b>$&</b>' );
 						linkElement.innerHTML = pageName;
 						listElement.classList.remove( 'hidden' );
-			
+
 					} else {
 
 						listElement.classList.add( 'hidden' );
-			
+
 					}
-			
+
 				}
 
 				// Show/hide categories depending on their content
@@ -325,9 +325,9 @@
 
 							hideCategory = false;
 							break;
-			
+
 						}
-			
+
 					}
 
 					// If and only if all page names are hidden, hide the whole category
@@ -335,15 +335,15 @@
 					if ( hideCategory ) {
 
 						categoryClassList.add( 'hidden' );
-			
+
 					} else {
 
 						categoryClassList.remove( 'hidden' );
-			
+
 					}
-			
+
 				} );
-			
+
 			}
 
 			function updateExampleLink( search ) {
@@ -352,13 +352,13 @@
 
 					const link = exampleLink.href.split( /[?#]/ )[ 0 ];
 					exampleLink.href = `${link}?q=${search}`;
-			
+
 				} else {
 
 					exampleLink.href = exampleDefaultLink;
-			
+
 				}
-			
+
 			}
 
 			function updateFilter() {
@@ -369,11 +369,11 @@
 				if ( search !== '' ) {
 
 					window.history.replaceState( {}, '', '?q=' + search + window.location.hash );
-			
+
 				} else {
 
 					window.history.replaceState( {}, '', window.location.pathname + window.location.hash );
-			
+
 				}
 
 				const regExp = createRegExp( search );
@@ -381,7 +381,7 @@
 				displayFilteredPanel( regExp );
 
 				updateExampleLink( search );
-			
+
 			}
 
 			// iframe content
@@ -399,16 +399,16 @@
 
 					parts = pageURL.split( oldDelimiter );
 					parts[ 1 ] = newDelimiter + parts[ 1 ];
-			
+
 				} else {
 
 					parts[ 0 ] = pageURL;
 					parts[ 1 ] = '';
-			
+
 				}
 
 				return parts;
-			
+
 			}
 
 			function createNewIframe() {
@@ -437,22 +437,22 @@
 					iframe.onload = function () {
 
 						iframe.style.display = 'unset';
-			
+
 					};
 
 					iframe.src = splitHash[ 0 ] + '.html' + splitHash[ 1 ];
 					subtitle = titles[ splitHash[ 0 ] ] + splitHash[ 1 ] + ' - ';
-			
+
 				} else {
 
 					iframe.src = '';
 					subtitle = '';
-			
+
 				}
 
 				document.body.replaceChild( iframe, oldIframe );
 				document.title = subtitle + 'GameControl docs';
-			
+
 			}
 
 			// Sub-pages Routing
@@ -469,13 +469,13 @@
 				if ( currentProperties ) {
 
 					return currentProperties.pageURL + splitPageName[ 1 ];
-			
+
 				} else {
 
 					return null;
-			
+
 				}
-			
+
 			}
 
 			function _setUrlFragment( pageName ) {
@@ -487,7 +487,7 @@
 					window.location.hash = pageURL;
 
 					createNewIframe();
-			
+
 				}
 
 			}

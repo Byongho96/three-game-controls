@@ -22,8 +22,33 @@ if ( ! window.frameElement && window.location.protocol !== 'file:' ) {
 
 function onDocumentLoad() {
 
-	const path = window.location.pathname;
-	const name = /[\-A-Za-z0-9]+\.html/.exec( path ).toString().split( '.html' )[ 0 ].replace( /-/g, ' ' );
+	let path, localizedPath;
+	const pathname = window.location.pathname;
+	const section = /\/(manual|api|examples)\//.exec( pathname )[ 1 ].toString().split( '.html' )[ 0 ];
+	let name = /[\-A-Za-z0-9]+\.html/.exec( pathname ).toString().split( '.html' )[ 0 ];
+
+	switch ( section ) {
+
+		case 'api':
+			localizedPath = /\/api\/[A-Za-z0-9\/]+/.exec( pathname ).toString().slice( 5 );
+
+			// Remove localized part of the path (e.g. 'en/' or 'es-MX/'):
+			path = localizedPath.replace( /^[A-Za-z0-9-]+\//, '' );
+
+			break;
+
+		case 'examples':
+			path = localizedPath = /\/examples\/[A-Za-z0-9\/]+/.exec( pathname ).toString().slice( 10 );
+			break;
+
+		case 'manual':
+			name = name.replace( /\-/g, ' ' );
+
+			path = pathname.replace( /\ /g, '-' );
+			path = localizedPath = /\/manual\/[-A-Za-z0-9\/]+/.exec( path ).toString().slice( 8 );
+			break;
+
+	}
 
 	let text = document.body.innerHTML;
 
@@ -34,7 +59,7 @@ function onDocumentLoad() {
 	text = text.replace( /\[page:\.([\w\.]+) ([\w\.\s]+)\]/gi, `[page:${name}.$1 $2]` ); // [page:.member title] to [page:name.member title]
 	text = text.replace( /\[page:([\w\.]+) ([\w\.\s]+)\]/gi, '<a class=\'links\' data-fragment=\'$1\' title=\'$1\'>$2</a>' ); // [page:name title]
 
-	text = text.replace( /\[(member|property|method|param):([\w]+)\]/gi, '[$1:$2 $2]' ); // [member:name] to [member:name title]
+	text = text.replace( /\[(member|property|method|param|3property|3param|3method):([\w]+)\]/gi, '[$1:$2 $2]' ); // [member:name] to [member:name title]
 	text = text.replace(
 		/\[(?:member|property|method):([\w]+) ([\w\.\s]+)\]\s*(\([\s\S]*?\))?/gi,
 		`<a class='permalink links' data-fragment='${name}.$2' target='_parent' title='${name}.$2'>#</a> .<a class='links' data-fragment='${name}.$2' id='$2'>$2</a> $3 : <a class='param links' data-fragment='$1'>$1</a>`,
@@ -49,9 +74,9 @@ function onDocumentLoad() {
 	); // *text*
 	text = text.replace( /\`(.*?)\`/gs, '<code class="inline">$1</code>' ); // `code`
 
-	text = text.replace( /\[example:([\w\_]+)\]/gi, '[example:$1 $1]' ); // [example:name] to [example:name title]
+	text = text.replace( /\[example:([\w\_\-/]+)\]/gi, '[example:$1 $1]' ); // [example:name] to [example:name title]
 	text = text.replace(
-		/\[example:([\w\_]+) ([\w\:\/\.\-\_ \s]+)\]/gi,
+		/\[example:([\w\_\-/]+) ([\w\:\/\.\-\_ \s]+)\]/gi,
 		'<a href="../examples/#$1" target="_blank">$2</a>',
 	); // [example:name title]
 
@@ -59,6 +84,25 @@ function onDocumentLoad() {
 		/<a class=\'param links\' data-fragment=\'\w+\'>(undefined|null|this|Boolean|Object|Array|Number|String|Integer|Float|TypedArray|ArrayBuffer)<\/a>/gi,
 		'<span class="param">$1</span>',
 	); // remove links to primitive types
+
+
+	text = text.replace( /\[3page:([\w:/.\-_()?#=!~]+) ([\w\.\s]+)\]/gi, '<a class=\'links\' target=\'_blank\' href="$1" title=\'$2\'>$2</a>' ); // [3page:name title]
+	text = text.replace(
+		/\[(?:3param):([\w:/.\-_()?#=!~]+) ([\w\.\s]+)\]/gi,
+		( _, g1, g2 ) => {
+
+			const lastPart = g1.substring( g1.lastIndexOf( '/' ) + 1 ).split( '.' )[ 0 ];
+			return `${g2} : <a class=\'param links\' href="${g1}" target="_blank">${lastPart}</a>`;
+
+		} );
+	text = text.replace(
+		/\[(?:3property|3method):([\w:/.\-_()?#=!~]+) ([\w\.\s]+)\]\s*(\([\s\S]*?\))?/gi,
+		( _, g1, g2, g3 ) => {
+
+			const lastPart = g1.substring( g1.lastIndexOf( '/' ) + 1 ).split( '.' )[ 0 ];
+			return `<a class='permalink links' data-fragment='${name}.${g2}' target='_parent' title='${name}.${g2}'>#</a> .<a class='links' data-fragment='${name}.${g2}' id='${g2}'>${g2}</a> ${g3 ?? ''} : <a class='param links' href="${g1}" target="_blank">${lastPart}</a>`;
+
+		} );
 
 	document.body.innerHTML = text;
 
@@ -69,6 +113,7 @@ function onDocumentLoad() {
 		const links = document.querySelectorAll( '.links' );
 		for ( let i = 0; i < links.length; i ++ ) {
 
+			if ( ! links[ i ].dataset.fragment ) continue;
 			const pageURL = window.parent.getPageURL( links[ i ].dataset.fragment );
 			if ( pageURL ) {
 
@@ -205,11 +250,12 @@ function onDocumentLoad() {
 		'click',
 		function () {
 
-			window.open( 'https://github.com/byongho96/three-game-controls/tree/master/public' + path );
+			window.open( 'https://github.com/byongho96/three-game-controls/tree/master/public/docs/' + section + '/' + localizedPath + '.html' );
 
 		},
 		false,
 	);
+
 
 	document.body.appendChild( editButton );
 

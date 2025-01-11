@@ -16,7 +16,7 @@
 		<script type="importmap">
 			{
 				"imports": {
-					"physics-character-controls": "../dist/bundle.esm.js",
+					"three-game-controls": "../dist/bundle.esm.js",
 					"three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
 					"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"
 				}
@@ -30,7 +30,7 @@
 
 			import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-			import { FPKeyboardControls, PhysicsControlsHelper } from 'physics-character-controls';
+			import { FPKeyboardControls, PhysicsControlsHelper } from 'three-game-controls';
 
 			const container = document.getElementById( 'container' );
 
@@ -52,9 +52,9 @@
 
 						child.castShadow = true;
 						child.receiveShadow = true;
-			
+
 					}
-			
+
 				} );
 
 				controls = new FPKeyboardControls( camera, renderer.domElement, world.scene );
@@ -82,7 +82,7 @@
 				const folder3 = gui.addFolder( 'Camera' );
 				folder3.add( controls, 'enableZoom' ).name( 'enable zoom' ).listen();
 				folder3.add( controls, 'zoomSpeed', 0, 3 ).name( 'zoom speed' ).listen();
-			
+
 			} );
 
 			// Scene
@@ -149,7 +149,7 @@
 				camera.updateProjectionMatrix();
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
-			
+
 			}
 
 			window.addEventListener( 'resize', onWindowResize );
@@ -175,24 +175,24 @@
 						if ( Array.isArray( object.material ) ) {
 
 							object.material.forEach( material => material.dispose() );
-			
+
 						} else if ( object.material ) {
 
 							object.material.dispose();
-			
+
 						}
-			
+
 					}
-			
+
 				} );
 
 				// Remove renderer DOM element
 				if ( renderer.domElement && renderer.domElement.parentNode ) {
 
 					renderer.domElement.parentNode.removeChild( renderer.domElement );
-			
+
 				}
-			
+
 			}
 
 			window.addEventListener( 'beforeunload', dispose );

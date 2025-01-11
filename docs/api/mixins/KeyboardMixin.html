@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<base href="../../" />
+		<script src="page.js"></script>
+		<link type="text/css" rel="stylesheet" href="page.css" />
+	</head>
+	<body>
+		<h1>[name]</h1>
+
+		<p class="desc">
+			A mixin that extends `FirstPersonControls` (which includes `ThirdPersonControls`) to add keyboard-based action mapping. This mixin allows for customizable key-to-action mappings, enabling precise control through keyboard inputs.
+		</p>
+
+		<h2>Constructor</h2>
+
+		<h3>[name]( [param:FirstPersonControls base] )</h3>
+		<p>
+			[page:FirstPersonControls base] — A class that extends `FirstPersonControls`.
+		</p>
+
+		<h2>Properties</h2>
+
+		<h3>[property:Object keyToActions]</h3>
+		<p>
+			A mapping of keyboard keys to actions. Each key is associated with one or more actions. Default is:
+		</p>
+		<code>
+		{
+			'KeyW': ['MOVE_FORWARD'],
+			'KeyS': ['MOVE_BACKWARD'],
+			'KeyA': ['MOVE_LEFTWARD'],
+			'KeyD': ['MOVE_RIGHTWARD'],
+			'Space': ['JUMP'],
+			'ShiftLeft': ['ACCELERATE']
+		}
+		</code>
+
+		<h2>Methods</h2>
+
+		<h3>[method:void connect]()</h3>
+		<p>
+			Connects the keyboard functionality by adding event listeners.
+		</p>
+
+		<h3>[method:void disconnect]()</h3>
+		<p>
+			Disconnects the keyboard functionality by removing event listeners.
+		</p>
+
+		<h3>[method:void dispose]()</h3>
+		<p>
+			Disposes of the keyboard functionality by cleaning up event listeners and resources.
+		</p>
+
+		<h2>Source</h2>
+
+		<p>[link:https://github.com/Byongho96/three-game-controls/blob/master/src/mixins/KeyboardMixin.ts mixins/KeyboardMixin.ts]</p>
+	</body>
+</html>

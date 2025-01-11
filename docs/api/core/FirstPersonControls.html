@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<base href="../../" />
+		<script src="page.js"></script>
+		<link type="text/css" rel="stylesheet" href="page.css" />
+	</head>
+	<body>
+		[page:PhysicsControls] &rarr;
+
+		<h1>[name]</h1>
+
+		<p class="desc">
+			FirstPersonControls is a control system operated through actions performed by the user. It updates the `velocity` inherited from PhysicsControls based on the actions.
+		</p>
+
+		<h2>Constructor</h2>
+
+		<h3>[name]( [3param:https://threejs.org/docs/#api/en/cameras/Camera object], [param:HTMLDOMElement domElement], [3param:https://threejs.org/docs/#api/en/core/Object3D world] )</h3>
+		<p>
+			[3page:https://threejs.org/docs/#api/en/cameras/Camera object] — The camera to be controlled.<br/>
+			[page:HTMLDOMElement domElement] — The HTML element for event listeners.<br/>
+			[3page:https://threejs.org/docs/#api/en/core/Object3D world] — The `Object3D` used to build the collision octree.<br/>
+		</p>
+
+		<h2>Properties</h2>
+
+		<h3>[property:Number accelerationFactor]</h3>
+		<p>
+			Multiplier for movement speed when accelerating.  Default is `1.5`.
+		</p>
+
+		<h3>[property:Object actionStates]</h3>
+		<p>
+			Defines the values for each action. The magnitude of each action is proportional to the assigned value. Default is:
+		</p>
+		<code>
+		{
+			'MOVE_FORWARD': 0,
+			'MOVE_BACKWARD': 0,
+			'MOVE_LEFTWARD': 0,
+			'MOVE_RIGHTWARD': 0,
+			'JUMP': 0,
+			'ACCELERATE': 0,
+			'ROTATE_UP': 0,
+			'ROTATE_DOWN': 0,
+			'ROTATE_RIGHT': 0,
+			'ROTATE_LEFT': 0
+		};
+		</code>
+
+		<h3>[property:Boolean enableAcceleration]</h3>
+		<p>
+			Whether to enable acceleration when holding the accelerate key. Default is `true`.
+		</p>
+
+		<h3>[property:Boolean enableZoom]</h3>
+		<p>
+			Whether to enable zooming with the mouse wheel. Default is `true`.
+		</p>
+
+		<h3>[property:Number eyeHeight]</h3>
+		<p>
+			Height of the camera from the ground. Default is `1.5`.
+		</p>
+
+		<h3>[property:Number floatingMoveSpeed]</h3>
+		<p>
+			Speed of movement when floating. Default is `8`.
+		</p>
+
+		<h3>[property:Number groundedMoveSpeed]</h3>
+		<p>
+			Speed of movement when grounded. Default is `30`.
+		</p>
+
+		<h3>[property:Number jumpForce]</h3>
+		<p>
+			Force applied for jumping. Default is `15`.
+		</p>
+		
+		<h3>[property:Number maxTiltAngle]</h3>
+		<p>
+			Maximum rotation tilt-up angle (radians). Default is `Math.PI / 2`.
+		</p>
+
+		<h3>[property:Number maxZoom]</h3>
+		<p>
+			Maximum zoom level. Default is `Infinity`.
+		</p>
+
+		<h3>[property:Number minTiltAngle]</h3>
+		<p>
+			Minimum rotation tilt-down angle (radians). Default is `- Math.PI / 2`.
+		</p>
+
+		<h3>[property:Number minZoom]</h3>
+		<p>
+			Minimum zoom level. Default is `0`.
+		</p>
+
+		<h3>[property:Number rotateSpeed]</h3>
+		<p>
+			Speed of rotation. Default is `1`.
+		</p>
+
+		<h3>[property:Number zoomSpeed]</h3>
+		<p>
+			Speed of zooming. Default is `1`.
+		</p>
+
+		<h2>Methods</h2>
+
+		<h3>[method:undefined connect]()</h3>
+		<p>
+			Connects the controls by adding event listeners to the `domElement`.
+		</p>
+
+		<h3>[method:undefined disconnect]()</h3>
+		<p>
+			Disconnects the controls by removing event listeners from the `domElement`.
+		</p>
+
+		<h3>[method:undefined dispose]()</h3>
+		<p>
+			Disposes of the controls, cleaning up resources and event listeners.
+		</p>
+		
+		<h3>[3method:https://threejs.org/docs/#api/en/math/Vector getForwardVector]( [3param:https://threejs.org/docs/#api/en/math/Vector3 target] )</h3>
+		<p>
+			[3page:https://threejs.org/docs/#api/en/math/Vector3 target] — the result will be copied into this Vector3.
+			<br /><br />
+			Returns the forward direction vector of the object in world coordinates.
+		</p>
+
+		<h3>[3method:https://threejs.org/docs/#api/en/math/Vector getRightwardVector]( [3param:https://threejs.org/docs/#api/en/math/Vector3 target] )</h3>
+		<p>
+			[3page:https://threejs.org/docs/#api/en/math/Vector3 target] — the result will be copied into this Vector3.
+			<br /><br />
+			Returns the right direction vector of the object in world coordinates.
+		</p>
+
+		<h3>[method:undefined update]( [param:Number delta] )</h3>
+		<p>
+			Update the controls. The `delta` is the time elapsed since the last update (in seconds).
+		</p>
+
+		<h2>Source</h2>
+
+		<p>[link:https://github.com/Byongho96/three-game-controls/blob/master/src/controls/core/FirstPersonControls.ts controls/core/FirstPersonControls.ts]</p>
+	</body>
+</html>

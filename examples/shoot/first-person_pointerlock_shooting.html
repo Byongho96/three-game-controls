@@ -153,9 +153,9 @@
 
 						monster.addToScene( scene );
 						monsterStore.add( monster );
-			
+
 					}, 1030 );
-			
+
 				},
 			);
 
@@ -210,7 +210,7 @@
 				bgmAudio.setVolume( 0.5 );
 				bgmAudio.setLoop( true );
 				bgmAudio.play();
-			
+
 			} );
 
 			// Stats
@@ -255,7 +255,7 @@
 
 								const newGun = new Uzi( loadedUzi.clone() );
 								user.equipGun( newGun );
-			
+
 							} else {
 
 								gltfLoader.load( '../assets/models/uzi.glb', gltf => {
@@ -263,18 +263,18 @@
 									loadedUzi = gltf.scene;
 									const newGun = new Uzi( loadedUzi.clone() );
 									user.equipGun( newGun );
-			
+
 								} );
-			
+
 							}
-			
+
 						} else if ( user.gun.name === 'uzi' ) {
 
 							if ( loadedHandGun ) {
 
 								const newGun = new HandGun( loadedHandGun.clone() );
 								user.equipGun( newGun );
-			
+
 							} else {
 
 								gltfLoader.load( '../assets/models/hand_gun.glb', gltf => {
@@ -282,19 +282,19 @@
 									loadedHandGun = gltf.scene;
 									const newGun = new HandGun( loadedHandGun.clone() );
 									user.equipGun( newGun );
-			
+
 								} );
-			
+
 							}
-			
+
 						}
-			
+
 					} else {
 						// console.warn('User 또는 총기가 아직 초기화되지 않았습니다.');
 					}
-			
+
 				}
-			
+
 			}
 
 			window.addEventListener( 'keydown', handleKeyDown );
@@ -308,13 +308,13 @@
 				monsterStore.monsters.forEach( monster => {
 
 					monster.update( delta, monsterStore.monsters );
-			
+
 				} );
 
 				renderer.render( scene, camera );
 
 				stats.update();
-			
+
 			}
 
 			function onWindowResize() {
@@ -323,7 +323,7 @@
 				camera.updateProjectionMatrix();
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
-			
+
 			}
 
 			window.addEventListener( 'resize', onWindowResize );
@@ -347,27 +347,27 @@
 						if ( Array.isArray( object.material ) ) {
 
 							object.material.forEach( material => material.dispose() );
-			
+
 						} else if ( object.material ) {
 
 							object.material.dispose();
-			
+
 						}
-			
+
 					}
-			
+
 				} );
 
 				if ( renderer.domElement && renderer.domElement.parentNode ) {
 
 					renderer.domElement.parentNode.removeChild( renderer.domElement );
-			
+
 				}
 
 				renderer.domElement.removeEventListener( 'click', handleClick );
 
 				window.removeEventListener( 'resize', onWindowResize );
-			
+
 			}
 
 			window.addEventListener( 'beforeunload', dispose );

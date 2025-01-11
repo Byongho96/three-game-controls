@@ -1,75 +1,55 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <base href="../../" />
-    <script src="page.js"></script>
-    <link type="text/css" rel="stylesheet" href="page.css" />
-  </head>
-  <body>
-    [page:Object3D] &rarr;
+	<head>
+		<meta charset="utf-8" />
+		<base href="../../" />
+		<script src="page.js"></script>
+		<link type="text/css" rel="stylesheet" href="page.css" />
+	</head>
+	<body>
+		[3page:https://threejs.org/docs/#api/en/objects/LineSegments LineSegments] &rarr;
 
-    <h1>[name]</h1>
+		<h1>[name]</h1>
 
-    <p class="desc">This displays a cone shaped helper object for a [page:SpotLight].</p>
+		<p class="desc">
+			A helper class for visualizing the collider of a `PhysicsControls` instance. This class uses a `CapsuleGeometry` to represent the collider and dynamically updates its position, rotation, and size.
+		</p>
 
-    <h2>Code Example</h2>
-    <code>
-      const spotLight = new THREE.SpotLight( 0xffffff ); spotLight.position.set( 10, 10, 10 ); scene.add( spotLight );
-      const spotLightHelper = new THREE.SpotLightHelper( spotLight ); scene.add( spotLightHelper );
-    </code>
+		<h2>Code Example</h2>
+		<code>
+		const controls = new FPKeyboardDragControls( camera, renderer.domElement, world.scene );
+		const helper = new PhysicsControlsHelper( controls, 0xffffff );
+		scene.add( helper );
+		</code>
 
-    <h2>Examples</h2>
-    <p>[example:webgl_lights_spotlights WebGL/ lights / spotlights ]</p>
+		<h2>Constructor</h2>
 
-    <h2>Constructor</h2>
+		<h3>[name]( [param:PhysicsControls controls], [param:Number color] )</h3>
+		<p>
+			[page:PhysicsControls controls] — The camera to be controlled.<br/>
+			[page:PhysicsControls controls] — Hex color code representing the capsule collider.(Ex. `0xff0000`)<br/>
+		</p>
+		<h2>Properties</h2>
 
-    <h3>[name]( [param:SpotLight light], [param:Hex color] )</h3>
-    <p>
-      [page:SpotLight light] -- The [page:SpotLight] to be visualized.
-      <br /><br />
+		<h3>[property:String type]</h3>
+		<p>
+			The type of the object. Always `'PhysicsControlsHelper'`.
+		</p>
 
-      [page:Hex color] -- (optional) if this is not the set the helper will take the color of the light.
-    </p>
+		<h2>Methods</h2>
 
-    <h2>Properties</h2>
-    <p>See the base [page:Object3D] class for common properties.</p>
+		<h3>[method:undefined update]()</h3>
+		<p>
+			Updates the position, rotation, and size of the helper to match the collider.
+		</p>
 
-    <h3>[property:LineSegments cone]</h3>
-    <p>[page:LineSegments] used to visualize the light.</p>
+		<h3>[method:undefined dispose]()</h3>
+		<p>
+			Disposes of the helper's geometry and material to free up resources.
+		</p>
 
-    <h3>[property:SpotLight light]</h3>
-    <p>Reference to the [page:SpotLight] being visualized.</p>
+		<h2>Source</h2>
 
-    <h3>[property:Object matrix]</h3>
-    <p>Reference to the spotLight's [page:Object3D.matrixWorld matrixWorld].</p>
-
-    <h3>[property:Object matrixAutoUpdate]</h3>
-    <p>
-      See [page:Object3D.matrixAutoUpdate]. Set to `false` here as the helper is using the spotLight's
-      [page:Object3D.matrixWorld matrixWorld].
-    </p>
-
-    <h3>[property:hex color]</h3>
-    <p>
-      The color parameter passed in the constructor. Default is `undefined`. If this is changed, the helper's color will
-      update the next time [page:.update update] is called.
-    </p>
-
-    <h2>Methods</h2>
-    <p>See the base [page:Object3D] class for common methods.</p>
-
-    <h3>[method:undefined dispose]()</h3>
-    <p>
-      Frees the GPU-related resources allocated by this instance. Call this method whenever this instance is no longer
-      used in your app.
-    </p>
-
-    <h3>[method:undefined update]()</h3>
-    <p>Updates the light helper.</p>
-
-    <h2>Source</h2>
-
-    <p>[link:https://github.com/mrdoob/three.js/blob/master/src/[path].js src/[path].js]</p>
-  </body>
+		<p>[link:https://github.com/Byongho96/three-game-controls/blob/master/src/helpers/PhysicsControlsHelper.ts helpers/PhysicsControlsHelper.ts]</p>  
+	</body>
 </html>

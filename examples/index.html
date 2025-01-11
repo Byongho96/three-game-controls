@@ -37,7 +37,7 @@
 				</div>
 
 				<div id="content">
-					<img id="previewsToggler" src="./files/thumbnails.svg" width="20" height="20" />
+					<img id="previewsToggler" src="../assets/thumbnails.svg" width="20" height="20" />
 				</div>
 			</div>
 		</div>
@@ -93,9 +93,9 @@
 
 						links[ file ] = link;
 						validRedirects.set( file, file + '.html' );
-			
+
 					}
-			
+
 				}
 
 				content.appendChild( fragment );
@@ -111,16 +111,16 @@
 						selectFile( file );
 						viewer.src = validRedirects.get( file );
 						viewer.style.display = 'unset';
-			
+
 					}
-			
+
 				}
 
 				if ( viewer.src === '' ) {
 
 					viewer.srcdoc = document.getElementById( 'PlaceholderHTML' ).innerHTML;
 					viewer.style.display = 'unset';
-			
+
 				}
 
 				filterInput.value = extractQuery();
@@ -130,11 +130,11 @@
 					panel.classList.add( 'searchFocused' );
 
 					updateFilter( files, tags );
-			
+
 				} else {
 
 					updateLink( '' );
-			
+
 				}
 
 				// Events
@@ -142,7 +142,7 @@
 				filterInput.onfocus = function () {
 
 					panel.classList.add( 'searchFocused' );
-			
+
 				};
 
 				filterInput.onblur = function () {
@@ -150,9 +150,9 @@
 					if ( filterInput.value === '' ) {
 
 						panel.classList.remove( 'searchFocused' );
-			
+
 					}
-			
+
 				};
 
 				clearSearchButton.onclick = function () {
@@ -160,34 +160,34 @@
 					filterInput.value = '';
 					updateFilter( files, tags );
 					filterInput.focus();
-			
+
 				};
 
 				filterInput.addEventListener( 'input', function () {
 
 					updateFilter( files, tags );
-			
+
 				} );
 
 				expandButton.addEventListener( 'click', function ( event ) {
 
 					event.preventDefault();
 					panel.classList.toggle( 'open' );
-			
+
 				} );
 
 				panelScrim.onclick = function ( event ) {
 
 					event.preventDefault();
 					panel.classList.toggle( 'open' );
-			
+
 				};
 
 				previewsToggler.onclick = function ( event ) {
 
 					event.preventDefault();
 					content.classList.toggle( 'minimal' );
-			
+
 				};
 
 				// iOS iframe auto-resize workaround
@@ -197,9 +197,9 @@
 					viewer.style.width = getComputedStyle( viewer ).width;
 					viewer.style.height = getComputedStyle( viewer ).height;
 					viewer.setAttribute( 'scrolling', 'no' );
-			
+
 				}
-			
+
 			}
 
 			function createLink( file, tags ) {
@@ -224,11 +224,11 @@
 					if ( event.button !== 0 || event.ctrlKey || event.altKey || event.metaKey ) return;
 
 					selectFile( file );
-			
+
 				} );
 
 				return link;
-			
+
 			}
 
 			function selectFile( file ) {
@@ -250,7 +250,7 @@
 				viewSrcButton.href =
 					'https://github.com/Byongho96/three-game-controls/tree/master/public/examples/' + selected + '.html';
 				viewSrcButton.title = 'View source code for ' + getName( selected ) + ' on GitHub';
-			
+
 			}
 
 			function escapeRegExp( string ) {
@@ -258,7 +258,7 @@
 				string = string.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' ); // https://stackoverflow.com/a/6969486/5250847
 
 				return '(?=.*' + string.split( ' ' ).join( ')(?=.*' ) + ')'; // match all words, in any order
-			
+
 			}
 
 			function updateFilter( files, tags ) {
@@ -269,11 +269,11 @@
 				if ( v !== '' ) {
 
 					window.history.replaceState( {}, '', '?q=' + v + window.location.hash );
-			
+
 				} else {
 
 					window.history.replaceState( {}, '', window.location.pathname + window.location.hash );
-			
+
 				}
 
 				const exp = new RegExp( escapeRegExp( v ), 'gi' );
@@ -285,15 +285,15 @@
 					for ( let i = 0; i < section.length; i ++ ) {
 
 						filterExample( section[ i ], exp, tags );
-			
+
 					}
-			
+
 				}
 
 				layoutList( files );
 
 				updateLink( v );
-			
+
 			}
 
 			function updateLink( search ) {
@@ -304,13 +304,13 @@
 
 					const link = sectionLink.href.split( /[?#]/ )[ 0 ];
 					sectionLink.href = `${link}?q=${search}`;
-			
+
 				} else {
 
 					sectionLink.href = sectionDefaultHref;
-			
+
 				}
-			
+
 			}
 
 			function filterExample( file, exp, tags ) {
@@ -322,13 +322,13 @@
 				if ( res && res.length > 0 ) {
 
 					link.classList.remove( 'hidden' );
-			
+
 				} else {
 
 					link.classList.add( 'hidden' );
-			
+
 				}
-			
+
 			}
 
 			function getName( file ) {
@@ -336,7 +336,7 @@
 				const name = file.split( '_' );
 				name.shift();
 				return name.join( ' / ' );
-			
+
 			}
 
 			function layoutList( files ) {
@@ -355,9 +355,9 @@
 
 							collapsed = false;
 							break;
-			
+
 						}
-			
+
 					}
 
 					const element = document.querySelector( 'h2[data-category="' + key + '"]' );
@@ -365,15 +365,15 @@
 					if ( collapsed ) {
 
 						element.classList.add( 'hidden' );
-			
+
 					} else {
 
 						element.classList.remove( 'hidden' );
-			
+
 					}
-			
+
 				}
-			
+
 			}
 
 			function extractQuery() {
@@ -383,11 +383,11 @@
 				if ( search.indexOf( '?q=' ) !== - 1 ) {
 
 					return decodeURI( search.slice( 3 ) );
-			
+
 				}
 
 				return '';
-			
+
 			}
 
 			function createElementFromHTML( htmlString ) {
@@ -395,7 +395,7 @@
 				const div = document.createElement( 'div' );
 				div.innerHTML = htmlString.trim();
 				return div.firstChild;
-			
+
 			}
 		</script>
 		<template id="PlaceholderHTML">

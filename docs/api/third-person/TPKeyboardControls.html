@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <base href="../../" />
+    <script src="page.js"></script>
+    <link type="text/css" rel="stylesheet" href="page.css" />
+  </head>
+  <body>
+    [page:ThirdPersonControls] &rarr;
+
+    <h1>[name]</h1>
+
+    <p class="desc">
+      Third-person controls operable via keyboard.
+    </p>
+
+    <h2>Examples</h2>
+
+    <p>
+			[example:third-person_keyboard_controls third-person / keyboard / controls ]<br/>
+		</p>
+
+    <h2>Constructor</h2>
+
+		<h3>[name]( [3param:https://threejs.org/docs/#api/en/cameras/Camera object], [param:HTMLDOMElement domElement], [3param:https://threejs.org/docs/#api/en/core/Object3D world] )</h3>
+		<p>
+			[3page:https://threejs.org/docs/#api/en/core/Object3D object] — The character to be controlled.<br/>
+			[page:HTMLDOMElement domElement]</strong> — The HTML element for event listeners.<br/>
+			[3page:https://threejs.org/docs/#api/en/core/Object3D world] — The `Object3D` used to build the collision octree.<br/>
+			[page:Object animationClips] — The Animation clips. Supported animations are:<br/>
+			<code>
+			'IDLE' | 'MOVE_FORWARD' | 'RUN_FORWARD' | 'MOVE_BACKWARD' | 'RUN_BACKWARD' | 'MOVE_LEFTWARD' | 'RUN_LEFTWARD' | 'MOVE_RIGHTWARD' | 'RUN_RIGHTWARD' | 'JUMP_UP' | 'LAND' | 'FALL'	
+			</code>
+			<code>
+			// Example of animationClips
+			{
+				'IDLE': idleClip,
+				'MOVE_FORWARD': moveClip,
+				'RUN_FORWARD': runClip,
+				...
+			}
+			</code>
+			[3page:https://threejs.org/docs/#api/en/cameras/Camera camera] — The camera following the character.<br/>
+		</p>
+
+		<h2>Mixins</h2>
+
+		<h3>[page:KeyboardMixin KeyboardMixin]</h3>
+
+		<p>
+			Provide Keyboard input for controlling the object.<br/>
+			`keyToActions` is overwritten:
+		</p>
+
+		<code>
+		keyToActions = {
+			'KeyW': [ 'MOVE_FORWARD' ],
+			'KeyS': [ 'MOVE_BACKWARD' ],
+			'KeyA': [ 'MOVE_LEFTWARD' ],
+			'KeyD': [ 'MOVE_RIGHTWARD' ],
+			'Space': [ 'JUMP' ],
+			'ShiftLeft': [ 'ACCELERATE' ],
+			'ArrowUp': [ 'ROTATE_UP' ],
+			'ArrowDown': [ 'ROTATE_DOWN' ],
+			'ArrowRight': [ 'ROTATE_RIGHT' ],
+			'ArrowLeft': [ 'ROTATE_LEFT' ]
+		};
+		</code>
+
+		<h2>Source</h2>
+		
+    <p>
+			[link:https://github.com/Byongho96/three-game-controls/blob/master/src/controls/FPKeyboardControls.ts controls/FPKeyboardControls.ts]
+    </p>
+  </body>
+</html>

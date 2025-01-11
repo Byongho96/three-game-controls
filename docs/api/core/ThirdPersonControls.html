@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<base href="../../" />
+		<script src="page.js"></script>
+		<link type="text/css" rel="stylesheet" href="page.css" />
+	</head>
+	<body>
+		[page:FirstPersonControls] &rarr;
+
+		<h1>[name]</h1>
+
+		<p class="desc">
+			Executes the appropriate animation based on the object's current state. Additionally, the camera tracks and rotates around the character.
+		</p>
+
+		<h2>Constructor</h2>
+
+		<h3>[name]( [3param:https://threejs.org/docs/#api/en/core/Object3D object], [param:HTMLDOMElement domElement], [3param:https://threejs.org/docs/#api/en/core/Object3D world], [param:Object animationClips], [3param:https://threejs.org/docs/#api/en/cameras/Camera camera] )</h3>
+		<p>
+			[3page:https://threejs.org/docs/#api/en/core/Object3D object] — The character to be controlled.<br/>
+			[page:HTMLDOMElement domElement]</strong> — The HTML element for event listeners.<br/>
+			[3page:https://threejs.org/docs/#api/en/core/Object3D world] — The `Object3D` used to build the collision octree.<br/>
+			[page:Object animationClips] — The Animation clips. Supported animations are:<br/>
+			<code>
+			'IDLE' | 'MOVE_FORWARD' | 'RUN_FORWARD' | 'MOVE_BACKWARD' | 'RUN_BACKWARD' | 'MOVE_LEFTWARD' | 'RUN_LEFTWARD' | 'MOVE_RIGHTWARD' | 'RUN_RIGHTWARD' | 'JUMP_UP' | 'LAND' | 'FALL'	
+			</code>
+			<code>
+			// Example of animationClips
+			{
+				'IDLE': idleClip,
+				'MOVE_FORWARD': moveClip,
+				'RUN_FORWARD': runClip,
+				...
+			}
+			</code>
+			[3page:https://threejs.org/docs/#api/en/cameras/Camera camera] — The camera following the character.<br/>
+		</p>
+
+		<h2>Properties</h2>
+
+		<h3>[property:Object animationClips]</h3>
+		<p>
+			(Read-only). Returns a frozen copy of the animation clips associated with the character.
+		</p>
+
+		<h3>[3property:https://threejs.org/docs/#api/en/cameras/Camera camera]</h3>
+		<p>
+			The time for transitioning between animations. Default is `0.3`.
+		</p>
+		
+		<h3>[3property:https://threejs.org/docs/#api/en/math/Vector3 cameraLookAtOffset]</h3>
+		<p>
+			Offset for the camera look-at position relative to the object. The default is defined based on the object's size: `new Vector3(0, objectSize.y * 0.8, 0)`.
+		</p>
+
+		<h3>[3property:https://threejs.org/docs/#api/en/math/Vector3 cameraPositionOffset]</h3>
+		<p>
+			Offset for the camera position relative to the object. The default is defined based on the object's size: `new Vector3( 0, objectSize.y * 1.5, - objectSize.y * 1.5 )`.
+		</p>
+		
+		<h3>[property:Number cameraLerpFactor]</h3>
+		<p>
+			Lerp factor for smooth camera transitions. Default is `1`.
+		</p>
+
+		<h3>[property:Number fallSpeedThreshold]</h3>
+		<p>
+			The speed threshold to trigger the falling animation. Default is `15`.
+		</p>
+
+		<h3>[property:Number moveSpeedThreshold]</h3>
+		<p>
+			The speed threshold to trigger the moving animation. Default is `1`.
+		</p>
+
+		<h3>[property:Number runSpeedThreshold]</h3>
+		<p>
+			The speed threshold to trigger the running animations. Default is `10`.
+		</p>
+
+		<h3>[property:String syncAxisWithCamera]</h3>
+		<p>
+			The value that determines when to synchronize the object's directional coordinates with the camera's directional coordinates. Default is `MOVE`.
+		</p>
+		<ul>
+			Possible values:
+			<li>`'ALWAYS'`: The object's forward axis is always synchronized with the camera.</li>
+			<li>`'MOVE'`: The object's forward axis is synchronized with the camera only when the object is moving.</li>
+			<li>`'NEVER'`: The object's forward axis is not synchronized with the camera.</li>
+		</ul>
+
+		<h3>[property:Number transitionDelay]</h3>
+		<p>
+			The delay for transitioning between animations. Default is `0.3`.
+		</p>
+
+		<h3>[property:Number transitionTime]</h3>
+		<p>
+			The time for transitioning between animations. Default is `0.3`.
+		</p>
+
+		<h2>Methods</h2>
+
+		<h3>[method:undefined deleteAnimationClip]( [param:String action] )</h3>
+		<p>
+			[page:String action] — The key of the animation clip to delete.<br /><br />
+			Deletes the animation clip associated with the specified key.
+		</p>
+
+		<h3>[method:undefined dispose]()</h3>
+		<p>
+			Disposes of the controls, cleaning up resources and event listeners.
+		</p>
+
+		<h3>[3method:https://threejs.org/docs/#api/en/animation/AnimationAction getAnimationAction]( [param:String action] )</h3>
+		<p>
+			[page:String action] — The key of the animation action to retrieve.<br /><br />
+			Returns the animation action associated with the specified key.
+		</p>
+
+		<h3>[method:undefined setAnimationClip]( [param:String action], [3param:https://threejs.org/docs/#api/en/animation/AnimationClip clip] )</h3>
+		<p>
+			[page:String action] — The key to associate with the animation clip.<br />
+			[3page:https://threejs.org/docs/#api/en/animation/AnimationClip clip] — The animation clip to set.<br /><br />
+			Sets an animation clip for the specified key.
+		</p>
+
+		<h3>[method:undefined update]( [param:Number delta] )</h3>
+		<p>
+			Update the controls. The `delta` is the time elapsed since the last update (in seconds).
+		</p>
+
+		<h2>Source</h2>
+
+		<p>[link:https://github.com/Byongho96/three-game-controls/blob/master/src/controls/core/ThirdPersonControls.ts controls/core/ThirdPersonControls.js]</p>
+ 
+	</body>
+</html>

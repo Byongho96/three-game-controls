@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <base href="../" />
+    <script src="page.js"></script>
+    <link type="text/css" rel="stylesheet" href="page.css" />
+  </head>
+  <body>
+    <h1>[name]</h1>
+
+		<p>This code snippet very briefly illustrates the core concept of= Three Game Controls:</p>
+		
+		<ul>
+				<li>FirstPersonControls</li>
+				<li>ThirdPersonControls</li>
+		</ul>
+
+		<h2>FirstPersonControls</h2>
+
+		<p>
+			FirstPersonControls provide a first-person perspective where the camera itself acts as the controller. 
+		</p>
+
+		<p>
+			To use FirstPersonControls, a <strong>background world mesh</strong> is required. For testing, you can use the sample mesh provided.
+		</p>
+		
+		<code>
+		import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+		import { FPKeyboardDragControls } from 'three-game-controls';
+		
+		const camera = new THREE.PerspectiveCamera( 45, width / height, 1, 1000 );
+		const clock = new THREE.Clock();
+		
+		const gltfLoader = new GLTFLoader();
+		
+		const renderer = new THREE.WebGLRenderer();
+		renderer.setAnimationLoop( animate );
+		renderer.setSize( window.innerWidth, window.innerHeight );
+		document.body.appendChild( renderer.domElement );
+		
+		let controls;
+		
+		gltfLoader.load( '../dist/assets/collision-world.glb', function ( gltf ) { 
+			scene.add( gltf.scene );
+	
+			controls = new FPDragControls( camera, renderer.domElement, gltf.scene );
+			controls.minYBoundary = -10;
+		});
+		
+		function animate() {
+			const delta = Math.min( 0.05, clock.getDelta() );
+			controls && controls.update( delta );
+			renderer.render( scene, camera );
+		}
+		</code>
+
+		<h2>ThirdPersonControls</h2>
+
+    <p>
+			ThirdPersonControls provide a third-person perspective where the character is present, and the camera tracks the character. 
+    </p>
+
+		<p>
+			In addition to the background world mesh, you need a character mesh with a skeletal structure and animation clip data. 
+			These assets can be obtained from platforms like [link:https://www.mixamo.com/#/ Mixamo]. Sample assets are also available for testing.
+		</p>
+			
+		<code>
+		import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+		import { FPKeyboardDragControls } from 'three-game-controls';
+		
+		const camera = new THREE.PerspectiveCamera( 45, width / height, 1, 1000 );
+		const clock = new THREE.Clock();
+		
+		const gltfLoader = new GLTFLoader();
+		
+		const renderer = new THREE.WebGLRenderer();
+		renderer.setAnimationLoop( animate );
+		renderer.setSize( window.innerWidth, window.innerHeight );
+		document.body.appendChild( renderer.domElement );
+		
+		let controls;
+		
+		Promise.all([
+			gltfLoader.loadAsync( '../dist/assets/collision-world.glb' ),
+			gltfLoader.loadAsync( '../dist/assets/x-bot.glb' ),
+			gltfLoader.loadAsync( '../dist/assets/ani-idle.glb' ),
+			gltfLoader.loadAsync( '../dist/assets/ani-forward.glb' ),
+			gltfLoader.loadAsync( '../dist/assets/ani-forward-fast.glb' ),
+			gltfLoader.loadAsync( '../dist/assets/ani-jump-up.glb' ),
+			gltfLoader.loadAsync( '../dist/assets/ani-land.glb' ),
+			gltfLoader.loadAsync( '../dist/assets/ani-fall.glb' )
+		]).then(
+			([
+				worldGltf, 
+				characterGltf, 
+				idleGltf, 
+				forwardGltf, 
+				forwardFastGltf, 
+				jumpUpGltf, 
+				landGltf, 
+				fallGltf
+			]) => {
+				scene.add(worldGltf.scene);
+				scene.add(characterGltf.scene);
+		
+				controls = new TPKeyboardDragControls(
+					characterGltf.scene,
+					renderer.domElement,
+					worldGltf.scene,
+					{
+						IDLE: idleGltf.animations[0],
+						MOVE_FORWARD: forwardGltf.animations[0],
+						RUN_FORWARD: forwardFastGltf.animations[0],
+						JUMP_UP: jumpUpGltf.animations[0],
+						LAND: landGltf.animations[0],
+						FALL: fallGltf.animations[0]
+					},
+					camera
+				);
+			}
+		);
+		
+		function animate() {
+			const delta = Math.min( 0.05, clock.getDelta() );
+			controls && controls.update(delta);
+			renderer.render(scene, camera);
+		}
+		</code>
+  </body>
+</html>

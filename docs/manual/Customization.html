@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<base href="../" />
+		<script src="page.js"></script>
+		<link type="text/css" rel="stylesheet" href="page.css" />
+	</head>
+	<body>
+		<h1>[name]</h1>
+
+		<p>
+			We provide controller APIs designed for major device scenarios. However, you can also create  
+			custom controls tailored to your preferred device. This is achieved using multiple inheritance through Mixins. 	
+		</p>
+
+		<p>
+			Below is an example of how `FPKeyboardControls`, which supports both keyboard and mouse drag operations, is created.
+		</p>
+
+		<h2>Example: FPKeyboardDragControls</h2>
+
+		<ul>
+				<li>[link:https://github.com/Byongho96/three-game-controls/blob/master/src/mixins/KeyboardMixin.ts KeyboardMixin]</li>
+				<li>[link:https://github.com/Byongho96/three-game-controls/blob/master/src/mixins/DragMixin.ts DragMixin]</li>
+		</ul>
+
+		<code>
+		import { FirstPersonControls, KeyboardMixin, DragMixin } from 'three-game-controls';
+
+		class FPKeyboardDragControls extends KeyboardMixin( DragMixin( FirstPersonControls ) ) {}
+
+		export { FPKeyboardDragControls };
+		</code>
+
+		<p>
+			By combining the Mixins we provide, or by writing your own Mixins, you can customize controls to meet your needs.
+		</p>
+
+	</body>
+</html>

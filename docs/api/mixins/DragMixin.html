@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<base href="../../" />
+		<script src="page.js"></script>
+		<link type="text/css" rel="stylesheet" href="page.css" />
+	</head>
+	<body>
+		<h1>[name]</h1>
+
+		<p class="desc">
+			A mixin that extends `FirstPersonControls` (which includes `ThirdPersonControls`) to add drag-based rotation capabilities. The mixin allows for customizable drag actions.
+		</p>
+
+		<h2>Constructor</h2>
+
+		<h3>[name]( [param:FirstPersonControls base] )</h3>
+		<p>
+			[page:FirstPersonControls base] — A class that extends `FirstPersonControls`.
+		</p>
+
+		<h2>Properties</h2>
+
+		<h3>[property:Array dragXActions]</h3>
+		<p>
+			An array of actions to be triggered by horizontal mouse movement. Default is `['ROTATE_RIGHT']`.
+		</p>
+
+		<h3>[property:Array dragYActions]</h3>
+		<p>
+			An array of actions to be triggered by vertical mouse movement. Default is `['ROTATE_DOWN']`.
+		</p>
+
+		<h3>[property:Number dragDampingFactor]</h3>
+		<p>
+			The damping factor applied to drag actions when [page:.enableDragDamping] is true. Default is `1`.
+		</p>
+
+		<h3>[property:Boolean enableDragDamping]</h3>
+		<p>
+			Determines whether drag damping is enabled. Default is `true`.
+		</p>
+
+		<h2>Methods</h2>
+
+		<h3>[method:void connect]()</h3>
+		<p>
+			Connects the drag functionality by adding event listeners.
+		</p>
+
+		<h3>[method:void disconnect]()</h3>
+		<p>
+			Disconnects the drag functionality by removing event listeners.
+		</p>
+
+		<h3>[method:void dispose]()</h3>
+		<p>
+			Disposes of the drag functionality by cleaning up event listeners and resources.
+		</p>
+
+		<h3>[method:void update]( [param:Number delta] )</h3>
+		<p>
+			Update the mixin. Must be called if [page:.enableDragDamping] is set. The `delta` is the time elapsed since the last update (in seconds).
+		</p>
+		
+		<h2>Source</h2>
+
+		<p>[link:https://github.com/Byongho96/three-game-controls/blob/master/src/mixins/DragMixin.ts mixins/DragMixin.ts]</p>
+	</body>
+</html>

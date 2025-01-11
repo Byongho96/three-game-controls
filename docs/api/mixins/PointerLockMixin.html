@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<base href="../../" />
+		<script src="page.js"></script>
+		<link type="text/css" rel="stylesheet" href="page.css" />
+	</head>
+	<body>
+		<h1>[name]</h1>
+
+		<p class="desc">
+			A mixin that extends `FirstPersonControls` (which includes `ThirdPersonControls`) to add pointer lock functionality. This mixin provides a mechanism to track mouse movements and map them to actions, enabling immersive control experiences.
+		</p>
+
+		<h2>Constructor</h2>
+
+		<h3>[name]( [param:FirstPersonControls base] )</h3>
+		<p>
+			[page:FirstPersonControls base] — A class that extends `FirstPersonControls`.
+		</p>
+
+		<h2>Properties</h2>
+
+		<h3>[property:Array pointerLockXActions]</h3>
+		<p>
+			An array of actions to be triggered by horizontal mouse movements. Default is `['ROTATE_RIGHT']`.
+		</p>
+
+		<h3>[property:Array pointerLockYActions]</h3>
+		<p>
+			An array of actions to be triggered by vertical mouse movements. Default is `['ROTATE_DOWN']`.
+		</p>
+
+		<h3>[property:Number pointerLockDampingFactor]</h3>
+		<p>
+			The damping factor applied to pointer lock actions when [page:.enablePointerLockDamping] is true. Default is `1`.
+		</p>
+
+		<h3>[property:Boolean enablePointerLockDamping]</h3>
+		<p>
+			Determines whether pointer lock damping is enabled. Default is `true`.
+		</p>
+
+		<h2>Methods</h2>
+
+		<h3>[method:void connect]()</h3>
+		<p>
+			Connects the pointer lock functionality by adding event listeners for `mousedown` and `mousemove`.
+		</p>
+
+		<h3>[method:void disconnect]()</h3>
+		<p>
+			Disconnects the pointer lock functionality by removing event listeners for `mousedown` and `mousemove`.
+		</p>
+
+		<h3>[method:void dispose]()</h3>
+		<p>
+			Disposes of the pointer lock functionality by cleaning up event listeners and resources.
+		</p>
+
+		<h3>[method:void update]( [param:Number delta] )</h3>
+		<p>
+			Update the mixin. Must be called if [page:.enablePointerLockDamping] is set. The `delta` is the time elapsed since the last update (in seconds).
+		</p>
+
+		<h2>Source</h2>
+
+		<p>[link:https://github.com/Byongho96/three-game-controls/blob/master/src/mixins/PointerLockMixin.ts mixins/PointerLockMixin.ts]</p>
+	</body>
+</html>

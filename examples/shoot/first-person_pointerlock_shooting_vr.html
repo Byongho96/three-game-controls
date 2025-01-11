@@ -80,7 +80,7 @@
 					colliderRadius: 0.5,
 				} );
 				controls.enabled = false;
-			
+
 			} );
 
 			// Renderer
@@ -117,7 +117,7 @@
 				cameraParent.add( xrCamera );
 
 				controls.enabled = true;
-			
+
 			} );
 
 			// Light
@@ -141,7 +141,7 @@
 
 				shootAudio.setBuffer( buffer );
 				shootAudio.setVolume( 0.5 );
-			
+
 			} );
 			audioLoader.load( '../../assets/audios/horror-bgm.mp3', buffer => {
 
@@ -149,7 +149,7 @@
 				bgmAudio.setVolume( 0.5 );
 				bgmAudio.setLoop( true );
 				bgmAudio.play();
-			
+
 			} );
 
 			// Stats
@@ -179,9 +179,9 @@
 					scene.add( monster.object );
 					monsters.push( monster );
 					monsterObjects.push( monster.object );
-			
+
 				}, 5000 );
-			
+
 			} );
 
 			// XR
@@ -222,9 +222,9 @@
 					scene.remove( monster.object );
 					monsters.splice( monsters.indexOf( monster ), 1 );
 					monsterObjects.splice( monsterObjects.indexOf( monster.object ), 1 );
-			
+
 				}, 1000 );
-			
+
 			}
 
 			let _gamepad1, gamepad2;
@@ -240,7 +240,7 @@
 			controller1.addEventListener( 'disconnected', function () {
 
 				this.remove( this.children[ 0 ] );
-			
+
 			} );
 			cameraParent.add( controller1 );
 
@@ -255,7 +255,7 @@
 			controller2.addEventListener( 'disconnected', function () {
 
 				this.remove( this.children[ 0 ] );
-			
+
 			} );
 			cameraParent.add( controller2 );
 
@@ -293,9 +293,9 @@
 						geometry = new THREE.RingGeometry( 0.02, 0.04, 32 ).translate( 0, 0, - 1 );
 						material = new THREE.MeshBasicMaterial( { opacity: 0.5, transparent: true } );
 						return new THREE.Mesh( geometry, material );
-			
+
 				}
-			
+
 			}
 
 			function animate() {
@@ -307,7 +307,7 @@
 				monsters.forEach( monster => {
 
 					monster.update( delta );
-			
+
 				} );
 
 				if ( gamepad2 ) {
@@ -337,7 +337,7 @@
 
 					controls.velocity.x = accumulatedDirection.x;
 					controls.velocity.z = accumulatedDirection.z;
-			
+
 				}
 
 				renderer.render( scene, camera );
@@ -352,7 +352,7 @@
 				camera.updateProjectionMatrix();
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
-			
+
 			}
 
 			window.addEventListener( 'resize', onWindowResize );
@@ -375,25 +375,25 @@
 						if ( Array.isArray( object.material ) ) {
 
 							object.material.forEach( material => material.dispose() );
-			
+
 						} else if ( object.material ) {
 
 							object.material.dispose();
-			
+
 						}
-			
+
 					}
-			
+
 				} );
 
 				if ( renderer.domElement && renderer.domElement.parentNode ) {
 
 					renderer.domElement.parentNode.removeChild( renderer.domElement );
-			
+
 				}
 
 				window.removeEventListener( 'resize', onWindowResize );
-			
+
 			}
 
 			window.addEventListener( 'beforeunload', dispose );
