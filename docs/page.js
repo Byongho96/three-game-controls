@@ -30,7 +30,7 @@ function onDocumentLoad() {
 	switch ( section ) {
 
 		case 'api':
-			localizedPath = /\/api\/[A-Za-z0-9\/]+/.exec( pathname ).toString().slice( 5 );
+			localizedPath = /\/api\/[A-Za-z0-9\/\-]+/.exec( pathname ).toString().slice( 5 );
 
 			// Remove localized part of the path (e.g. 'en/' or 'es-MX/'):
 			path = localizedPath.replace( /^[A-Za-z0-9-]+\//, '' );
@@ -38,14 +38,14 @@ function onDocumentLoad() {
 			break;
 
 		case 'examples':
-			path = localizedPath = /\/examples\/[A-Za-z0-9\/]+/.exec( pathname ).toString().slice( 10 );
+			path = localizedPath = /\/examples\/[A-Za-z0-9\/\-]+/.exec( pathname ).toString().slice( 10 );
 			break;
 
 		case 'manual':
 			name = name.replace( /\-/g, ' ' );
 
 			path = pathname.replace( /\ /g, '-' );
-			path = localizedPath = /\/manual\/[-A-Za-z0-9\/]+/.exec( path ).toString().slice( 8 );
+			path = localizedPath = /\/manual\/[-A-Za-z0-9\/\-]+/.exec( path ).toString().slice( 8 );
 			break;
 
 	}
