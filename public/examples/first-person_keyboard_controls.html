@@ -1,15 +1,15 @@
 <!doctype html>
 <html lang="en">
 	<head>
-		<title>Physics Character Controls - Supported by Three.js</title>
+		<title>FPKeyboardControls</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 		<link type="text/css" rel="stylesheet" href="main.css" />
 	</head>
 	<body>
 		<div id="info">
-			Physics character controls demo <br />
-			WASD to move and SPACE to jump
+			FPKeyboardControls demo <br />
+			WASD to move, SPACE to jump, and arrow keys to rotate
 		</div>
 		<div id="container"></div>
 
@@ -37,53 +37,57 @@
 			const gui = new GUI( { width: 200 } );
 
 			const clock = new THREE.Clock();
-
-			const gltfLoader = new GLTFLoader();
-
+			
 			let controls;
 			let helpers;
 
-			Promise.all( [ gltfLoader.loadAsync( './assets/models/collision-world.glb' ) ] ).then( ( [ world ] ) => {
+			const gltfLoader = new GLTFLoader();
+			gltfLoader.setPath( 'https://byongho96.github.io/three-game-controls/dist/assets/' );
+			
+			Promise.all( [ gltfLoader.loadAsync( 'collision-world.glb' ) ] ).then(
+				( [ world ] ) => {
 
-				scene.add( world.scene );
-				world.scene.traverse( child => {
+					scene.add( world.scene );
+					world.scene.traverse( child => {
 
-					if ( child.isMesh ) {
+						if ( child.isMesh ) {
 
-						child.castShadow = true;
-						child.receiveShadow = true;
+							child.castShadow = true;
+							child.receiveShadow = true;
 
-					}
+						}
 
-				} );
+					} );
 
-				controls = new FPKeyboardControls( camera, renderer.domElement, world.scene );
-				controls.minYBoundary = - 10;
+					controls = new FPKeyboardControls( camera, renderer.domElement, world.scene );
+					controls.minYBoundary = - 10;
 
-				helpers = new PhysicsControlsHelper( controls, 0xffffff );
-				helpers.visible = false;
-				scene.add( helpers );
+					helpers = new PhysicsControlsHelper( controls, 0xffffff );
+					helpers.visible = false;
+					scene.add( helpers );
 
-				// GUI - Debug
-				const folder1 = gui.addFolder( 'Debug' );
-				folder1.add( helpers, 'visible' ).name( 'debug' ).listen();
+					// GUI - Debug
+					const folder1 = gui.addFolder( 'Debug' );
+					folder1.add( helpers, 'visible' ).name( 'debug' ).listen();
 
-				// GUI - Physics
-				const folder2 = gui.addFolder( 'Physics' );
-				folder2.add( controls, 'gravity', 0, 50 ).name( 'gravity' ).listen();
-				folder2.add( controls, 'jumpForce', 0, 30 ).name( 'jump force' ).listen();
-				folder2.add( controls, 'groundedMoveSpeed', 0, 50 ).name( 'move speed' ).listen();
-				folder2.add( controls, 'rotateSpeed', 0, 5 ).name( 'rotate speed' ).listen();
-				folder2.add( controls, 'resistance', 0, 10 ).name( 'resistance' ).listen();
-				folder2.add( controls, 'enableAcceleration' ).name( 'enable acceleration' ).listen();
-				folder2.add( controls, 'accelerationFactor', 1, 3 ).name( 'acceleration factor' ).listen();
+					// GUI - Physics
+					const folder2 = gui.addFolder( 'Physics' );
+					folder2.add( controls, 'gravity', 0, 50 ).name( 'gravity' ).listen();
+					folder2.add( controls, 'jumpForce', 0, 30 ).name( 'jump force' ).listen();
+					folder2.add( controls, 'groundedMoveSpeed', 0, 50 ).name( 'move speed' ).listen();
+					folder2.add( controls, 'rotateSpeed', 0, 5 ).name( 'rotate speed' ).listen();
+					folder2.add( controls, 'resistance', 0, 10 ).name( 'resistance' ).listen();
+					folder2.add( controls, 'enableAcceleration' ).name( 'enable acceleration' ).listen();
+					folder2.add( controls, 'accelerationFactor', 1, 3 ).name( 'acceleration factor' ).listen();
 
-				// GUI - Camera
-				const folder3 = gui.addFolder( 'Camera' );
-				folder3.add( controls, 'enableZoom' ).name( 'enable zoom' ).listen();
-				folder3.add( controls, 'zoomSpeed', 0, 3 ).name( 'zoom speed' ).listen();
+					// GUI - Camera
+					const folder3 = gui.addFolder( 'Camera' );
+					folder3.add( controls, 'enableZoom' ).name( 'enable zoom' ).listen();
+					folder3.add( controls, 'zoomSpeed', 0, 3 ).name( 'zoom speed' ).listen();
 
-			} );
+				}
+			
+			);
 
 			// Scene
 			const scene = new THREE.Scene();
