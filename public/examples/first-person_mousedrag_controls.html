@@ -1,15 +1,15 @@
 <!doctype html>
 <html lang="en">
 	<head>
-		<title>Physics Character Controls - Supported by Three.js</title>
+		<title>FPKeyDragControls</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 		<link type="text/css" rel="stylesheet" href="main.css" />
 	</head>
 	<body>
 		<div id="info">
-			Physics character controls demo <br />
-			WASD to move and SPACE to jump
+			FPKeyDragControls demo <br />
+			WASD to move, SPACE to jump, and rotate by dragging the mouse
 		</div>
 		<div id="container"></div>
 
@@ -38,12 +38,13 @@
 
 			const clock = new THREE.Clock();
 
-			const gltfLoader = new GLTFLoader();
-
 			let controls;
 			let helpers;
 
-			Promise.all( [ gltfLoader.loadAsync( './assets/models/collision-world.glb' ) ] ).then(
+			const gltfLoader = new GLTFLoader();
+			gltfLoader.setPath( 'https://byongho96.github.io/three-game-controls/dist/assets/' );
+			
+			Promise.all( [ gltfLoader.loadAsync( 'collision-world.glb' ) ] ).then(
 				( [ world ] ) => {
 
 					scene.add( world.scene );
