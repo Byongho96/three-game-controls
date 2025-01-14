@@ -224,7 +224,6 @@ Promise.all( [
       camera
     );
     controls.minYBoundary = - 10;
-    console.log( controls );
 
     renderer.setAnimationLoop( animate );
 

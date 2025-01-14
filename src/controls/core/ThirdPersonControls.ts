@@ -45,7 +45,7 @@ class ThirdPersonControls extends FirstPersonControls {
 	moveSpeedThreshold: number = 1;
 
 	/** Speed threshold to trigger running animations. */
-	runSpeedThreshold: number = 10;
+	runSpeedThreshold: number = 8;
 
 	/** The camera used for third-person perspective. */
 	camera: Camera | null;

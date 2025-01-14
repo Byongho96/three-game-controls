@@ -1,6 +1,6 @@
 {
   "name": "three-game-controls",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "game controls for three.js",
   "main": "dist/bundle.cjs.js",
   "module": "dist/bundle.esm.js",
@@ -11,6 +11,13 @@
     },
     "./assets/*": "./dist/assets/*"
   },
+  "files": [
+    "dist",
+    "tsconfig.json",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
+  ],
   "sideEffects": false,
   "scripts": {
     "dev": "cross-env NODE_ENV=development rollup -c --watch",
@@ -24,7 +31,16 @@
       "eslint --fix"
     ]
   },
-  "keywords": [],
+  "keywords": [
+    "three",
+    "three.js",
+    "game",
+    "controls",
+    "3d",
+    "physics",
+    "character",
+    "animation"
+  ],
   "author": "Byongho Lee",
   "license": "ISC",
   "devDependencies": {
@@ -37,6 +53,8 @@
     "@rollup/plugin-node-resolve": "^15.3.0",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^12.1.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
     "@types/three": "^0.169.0",
     "@typescript-eslint/eslint-plugin": "^8.8.0",
     "@typescript-eslint/parser": "^8.8.0",
@@ -55,6 +73,7 @@
     "rollup-plugin-delete": "^2.1.0",
     "rollup-plugin-livereload": "^2.0.5",
     "rollup-plugin-serve": "^1.1.1",
+    "semantic-release": "^24.2.1",
     "typescript": "^5.6.2"
   },
   "peerDependencies": {
