@@ -166,8 +166,8 @@ Promise.all( [
   gltfLoader.loadAsync( 'collision-world.glb' ),
   gltfLoader.loadAsync( 'x-bot.glb' ),
   gltfLoader.loadAsync( 'ani-idle.glb' ),
-  gltfLoader.loadAsync( 'run_forward.glb' ),
   gltfLoader.loadAsync( 'ani-forward.glb' ),
+  gltfLoader.loadAsync( 'ani-forward-fast.glb' ),
   gltfLoader.loadAsync( 'ani-jump-up.glb' ),
   gltfLoader.loadAsync( 'ani-land.glb' ),
   gltfLoader.loadAsync( 'ani-fall.glb' )

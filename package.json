@@ -1,6 +1,6 @@
 {
   "name": "three-game-controls",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "game controls for three.js",
   "main": "dist/bundle.cjs.js",
   "module": "dist/bundle.esm.js",

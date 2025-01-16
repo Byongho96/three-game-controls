@@ -50,9 +50,9 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 	landTimeThreshold: number = 0.3;
 
 	/** Distance tolerance for landing detection.
-	 * @default 0.2
+	 * @default 0.6
 	 */
-	landTolerance: number = 0.2;
+	landTolerance: number = 0.6;
 
 	/** Collider for the object.
 	 * @default `new Collider()`
@@ -189,7 +189,7 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 
 		if ( collisionResult.depth >= 1e-10 ) {
 
-			this.collider.translate( collisionResult.normal.multiplyScalar( collisionResult.depth ) );
+			this.collider.translate( collisionResult.normal.multiplyScalar( collisionResult.depth * 1.01 ) );
 			this.dispatchEvent( { ..._collideEvent, normal: collisionResult.normal.normalize() as Vector3 } );
 
 		}

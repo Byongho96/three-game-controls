@@ -1,15 +1,17 @@
 <!doctype html>
 <html lang="en">
 	<head>
-		<title>TPKeyDragControls</title>
+		<title>Third-person gyroscope control</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 		<link type="text/css" rel="stylesheet" href="main.css" />
 	</head>
 	<body>
 		<div id="info">
-			TPKeyDragControls demo <br />
-			WASD to move, SPACE to jump, and rotate by dragging the mouse
+			Third-person gyroscope controls demo <br />
+			Tilt your device to move the character<br/>
+			( ios 13+: Click the screen to grant DeviceOrientationEvent )<br/>
+			<button id="reset">reset orientation</button>
 		</div>
 		<div id="container"></div>
 
@@ -18,7 +20,7 @@
 				"imports": {
 					"three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
 					"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/",
-					"three-game-controls": "../../dist/bundle.esm.js"
+					"three-game-controls": "../dist/bundle.esm.js"
 				}
 			}
 		</script>
@@ -30,7 +32,7 @@
 
 			import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-			import { TPKeyboardDragControls, PhysicsControlsHelper } from 'three-game-controls';
+			import { GyroMixin, ThirdPersonControls, PhysicsControlsHelper } from 'three-game-controls';
 
 			const container = document.getElementById( 'container' );
 
@@ -43,7 +45,7 @@
 
 			const gltfLoader = new GLTFLoader();
 			gltfLoader.setPath( 'https://byongho96.github.io/three-game-controls/assets/' );
-			
+
 			Promise.all( [
 				gltfLoader.loadAsync( 'collision-world.glb' ),
 				gltfLoader.loadAsync( 'x-bot.glb' ),
@@ -102,7 +104,9 @@
 
 					} );
 
-					controls = new TPKeyboardDragControls(
+					const TPGyroControls = GyroMixin( ThirdPersonControls );
+
+					controls = new TPGyroControls(
 						character.scene,
 						renderer.domElement,
 						world.scene,
@@ -238,6 +242,15 @@
 			}
 
 			window.addEventListener( 'resize', onWindowResize );
+
+
+			function resetOrientation() {
+
+				if ( controls )controls.needsResetOrientation = true;
+			
+			}
+
+			document.getElementById( 'reset' ).addEventListener( 'click', resetOrientation );
 
 			// Dispose function
 			function dispose() {
