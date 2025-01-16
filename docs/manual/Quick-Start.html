@@ -23,7 +23,7 @@
 		</p>
 
 		<p>
-			To use FirstPersonControls, a <strong>background world mesh</strong> is required. For testing, you can use the sample mesh provided.
+			To use FirstPersonControls, a <strong>background world mesh</strong> is required. For testing, you can use [link:https://github.com/Byongho96/three-game-controls/tree/gh-pages/assets the sample mesh] provided.
 		</p>
 		
 		<code>
@@ -64,7 +64,7 @@
 		let controls;
 		
 		const gltfLoader = new GLTFLoader();
-		gltfLoader.setPath( 'https://byongho96.github.io/three-game-controls/dist/assets/' );
+		gltfLoader.setPath( 'https://byongho96.github.io/three-game-controls/assets/' );
 		
 		gltfLoader.load( 'collision-world.glb', ( gltf ) => {
 		
@@ -106,7 +106,7 @@
 
 		<p>
 			In addition to the background world mesh, you need a character mesh with a skeletal structure and animation clip data. 
-			These assets can be obtained from platforms like [link:https://www.mixamo.com/#/ Mixamo]. Sample assets are also available for testing.
+			These assets can be obtained from platforms like [link:https://www.mixamo.com/#/ Mixamo]. [link:https://github.com/Byongho96/three-game-controls/tree/gh-pages/assets Sample assets] are also available for testing.
 		</p>
 			
 		<code>
@@ -147,7 +147,7 @@
 		let controls;
 
 		const gltfLoader = new GLTFLoader();
-		gltfLoader.setPath( 'https://byongho96.github.io/three-game-controls/dist/assets/' );
+		gltfLoader.setPath( 'https://byongho96.github.io/three-game-controls/assets/' );
 
 		Promise.all( [
 			gltfLoader.loadAsync( 'collision-world.glb' ),
@@ -210,7 +210,6 @@
 					camera
 				);
 				controls.minYBoundary = - 10;
-				console.log( controls );
 
 				renderer.setAnimationLoop( animate );
 

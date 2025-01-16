@@ -27,7 +27,7 @@
   src:
     local('Roboto Mono'),
     local('RobotoMono-Regular'),
-    url('../assets/RobotoMono-Regular.woff2') format('woff2');
+    url('../files/RobotoMono-Regular.woff2') format('woff2');
   font-style: normal;
   font-weight: 400;
 }
@@ -38,7 +38,7 @@
   font-weight: 400;
   src:
     local('Inter-Regular'),
-    url('../assets/Inter-Regular.woff2?v=3.6') format('woff2');
+    url('../files/Inter-Regular.woff2?v=3.6') format('woff2');
 }
 
 @font-face {
@@ -47,7 +47,7 @@
   font-weight: 600;
   src:
     local('Inter-SemiBold'),
-    url('../assets/Inter-SemiBold.woff2?v=3.6') format('woff2');
+    url('../files/Inter-SemiBold.woff2?v=3.6') format('woff2');
 }
 
 html {
@@ -183,7 +183,7 @@ code.inline {
   width: 24px;
   height: 24px;
   background-color: transparent;
-  background-image: url('../assets/ic_copy_grey_24dp.svg');
+  background-image: url('../files/ic_copy_grey_24dp.svg');
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
@@ -198,7 +198,7 @@ code.inline {
 .copy-btn.copied {
   pointer-events: none;
   opacity: 1;
-  background-image: url('../assets/ic_tick_green_24dp.svg');
+  background-image: url('../files/ic_tick_green_24dp.svg');
 }
 
 table {
@@ -261,7 +261,7 @@ strong {
   height: 44px;
 
   background-color: #fff;
-  background-image: url('../assets/ic_mode_edit_black_24dp.svg');
+  background-image: url('../files/ic_mode_edit_black_24dp.svg');
   background-size: 50%;
   background-position: center;
   background-repeat: no-repeat;
