@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<base href="../../" />
+		<script src="page.js"></script>
+		<link type="text/css" rel="stylesheet" href="page.css" />
+	</head>
+	<body>
+		<h1>[name]</h1>
+
+		<p class="desc">
+      A mixin that extends `FirstPersonControls` to add device orientation-based controls. This mixin uses device gyroscope data to control actions along the X, Y, and Z axes, enabling motion-based interactions.
+    </p>
+
+    <h2>Constructor</h2>
+
+		<h3>[name]( [param:FirstPersonControls base] )</h3>
+		<p>
+			[page:FirstPersonControls base] — A class that extends `FirstPersonControls`.
+		</p>
+
+    <h2>Properties</h2>
+
+    <h3>[property:Array gyroXActions]</h3>
+    <p>
+			An array of actions triggered by gyroscope movement along the X-axis. Default is `['MOVE_BACKWARD']`.
+    </p>
+
+		<h3>[property:Number gyroXOffset]</h3>
+		<p>
+			Reference value for the gyroscope's X-axis orientation. Default: `0`.
+		</p>
+
+		<h3>[property:Number gyroXMultiplier]</h3>
+		<p>
+			The multiplier for the x-axis orientation. Default: `0.1`.
+		</p>
+
+    <h3>[property:Array gyroYActions]</h3>
+    <p>
+      An array of actions triggered by gyroscope movement along the Y-axis. Default is `['MOVE_RIGHTWARD']`.
+    </p>
+
+		<h3>[property:Number gyroYOffset]</h3>
+		<p>
+			Reference value for the gyroscope's Y-axis orientation. Default: `0`.
+		</p>
+
+		<h3>[property:Number gyroYMultiplier]</h3>
+		<p>
+			The multiplier for the y-axis orientation. Default: `0.1`.
+		</p>
+
+    <h3>[property:Array gyroZActions]</h3>
+    <p>
+			An array of actions triggered by gyroscope movement along the Z-axis. Default is `[]`.
+    </p>
+
+    <h3>[property:Number gyroZOffset]</h3>
+    <p>
+      Reference value for the gyroscope's Z-axis orientation. Default: `0`.
+    </p>
+
+		
+		<h3>[property:Number gyroZMultiplier]</h3>
+		<p>
+			The multiplier for the z-axis orientation. Default: `0.1`.
+		</p>
+
+    <h3>[property:Boolean needsResetOrientation]</h3>
+    <p>
+      Determines whether the reference values for orientation (`gyroXOffset`, `gyroYOffset`, `gyroZOffset`) should be reset on the next device orientation event. Default: `true`.
+    </p>
+
+		<h2>Methods</h2>
+
+		<h3>[method:void connect]()</h3>
+		<p>
+			Connects the drag functionality by adding event listeners.
+		</p>
+
+		<h3>[method:void disconnect]()</h3>
+		<p>
+			Disconnects the drag functionality by removing event listeners.
+		</p>
+
+		<h3>[method:void dispose]()</h3>
+		<p>
+			Disposes of the drag functionality by cleaning up event listeners and resources.
+		</p>
+		
+		<h2>Source</h2>
+
+		<p>[link:https://github.com/Byongho96/three-game-controls/blob/master/src/mixins/GyroMixin.ts mixins/GyroMixin.ts]</p>
+	</body>
+</html>
