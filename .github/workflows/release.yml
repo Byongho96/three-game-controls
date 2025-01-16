@@ -7,7 +7,6 @@ on:
 
 jobs:
   release:
-    needs: setup
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

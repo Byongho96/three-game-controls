@@ -14,9 +14,9 @@
 		<script type="importmap">
 			{
 				"imports": {
-					"physics-character-controls": "../../dist/bundle.esm.js",
 					"three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
-					"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"
+					"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/",
+					"three-game-controls": "https://cdn.jsdelivr.net/npm/three-game-controls/dist/bundle.esm.js"
 				}
 			}
 		</script>
@@ -27,7 +27,7 @@
 
 			import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-			import { PhysicsControls } from 'physics-character-controls';
+			import { PhysicsControls } from 'three-game-controls';
 
 			import { MonsterFactory } from './monster.js';
 

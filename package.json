@@ -42,7 +42,15 @@
     "animation"
   ],
   "author": "Byongho Lee",
-  "license": "ISC",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Byongho96/three-game-controls"
+  },
+  "bugs": {
+    "url": "https://github.com/Byongho96/three-game-controls/issues"
+  },
+  "homepage": "https://byongho96.github.io/three-game-controls/",
   "devDependencies": {
     "@babel/core": "^7.25.7",
     "@babel/preset-env": "^7.25.7",
@@ -69,7 +77,6 @@
     "husky": "^8.0.0",
     "lint-staged": "^15.2.10",
     "rollup": "^2.79.2",
-    "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-delete": "^2.1.0",
     "rollup-plugin-livereload": "^2.0.5",
     "rollup-plugin-serve": "^1.1.1",
