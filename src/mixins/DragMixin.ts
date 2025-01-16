@@ -13,13 +13,13 @@ function DragMixin<T extends Constructor<FirstPersonControls>>( Base: T ): Const
 	return class DragMixin extends Base {
 
 		/**
-		 * The actions to be performed when dragging the mouse along the x-axis.
+		 * The actions to be performed when dragging along the x-axis.
 		 * @default [ 'ROTATE_RIGHT' ]
 		 */
 		dragXActions: Action[] = [ 'ROTATE_RIGHT' ];
 
 		/**
-		 * The actions to be performed when dragging the mouse along the y-axis.
+		 * The actions to be performed when dragging along the y-axis.
 		 * @default [ 'ROTATE_DOWN' ]
 		 */
 		dragYActions: Action[] = [ 'ROTATE_DOWN' ];
@@ -37,20 +37,24 @@ function DragMixin<T extends Constructor<FirstPersonControls>>( Base: T ): Const
 		enableDragDamping: boolean = true;
 
 		// Internals
-		protected _isMouseDown: boolean = false;
+		protected _isDragging: boolean = false;
 
-		private _bindOnMouseDown: ( ) => void;
-		private _bindOnMouseUp: ( ) => void;
-		private _bindOnMouseMove: ( event: MouseEvent ) => void;
+		private _lastTouchX: number = 0;
+		private _lastTouchY: number = 0;
+
+		private _bindOnDragStart: ( event: MouseEvent | TouchEvent ) => void;
+		private _bindOnDragEnd: ( ) => void;
+		private _bindOnDragMove: ( event: MouseEvent | TouchEvent ) => void;
+
 
 
 		constructor( ...args: any[] ) {
 
 			super( ...args );
 
-			this._bindOnMouseDown = this._onMouseDown.bind( this );
-			this._bindOnMouseUp = this._onMouseUp.bind( this );
-			this._bindOnMouseMove = this._onMouseMove.bind( this );
+			this._bindOnDragStart = this._onDragStart.bind( this );
+			this._bindOnDragEnd = this._onDragEnd.bind( this );
+			this._bindOnDragMove = this._onDragMove.bind( this );
 
 			this.connect();
 
@@ -63,9 +67,13 @@ function DragMixin<T extends Constructor<FirstPersonControls>>( Base: T ): Const
 
 			super.connect();
 
-			this.domElement?.addEventListener( 'mousedown', this._bindOnMouseDown );
-			document.addEventListener( 'mouseup', this._bindOnMouseUp );
-			this.domElement?.addEventListener( 'mousemove', this._bindOnMouseMove );
+			this.domElement?.addEventListener( 'mousedown', this._bindOnDragStart );
+			document.addEventListener( 'mouseup', this._bindOnDragEnd );
+			this.domElement?.addEventListener( 'mousemove', this._bindOnDragMove );
+
+			this.domElement?.addEventListener( 'touchstart', this._bindOnDragStart );
+			document.addEventListener( 'touchend', this._bindOnDragEnd );
+			this.domElement?.addEventListener( 'touchmove', this._bindOnDragMove );
 
 		}
 
@@ -76,9 +84,13 @@ function DragMixin<T extends Constructor<FirstPersonControls>>( Base: T ): Const
 
 			super.disconnect();
 
-			this.domElement?.removeEventListener( 'mousedown', this._bindOnMouseDown );
-			document.removeEventListener( 'mouseup', this._bindOnMouseUp );
-			this.domElement?.removeEventListener( 'mousemove', this._bindOnMouseMove );
+			this.domElement?.removeEventListener( 'mousedown', this._bindOnDragStart );
+			document.removeEventListener( 'mouseup', this._bindOnDragEnd );
+			this.domElement?.removeEventListener( 'mousemove', this._bindOnDragMove );
+
+			this.domElement?.removeEventListener( 'touchstart', this._bindOnDragStart );
+			document.removeEventListener( 'touchend', this._bindOnDragEnd );
+			this.domElement?.removeEventListener( 'touchmove', this._bindOnDragMove );
 
 		}
 
@@ -115,34 +127,66 @@ function DragMixin<T extends Constructor<FirstPersonControls>>( Base: T ): Const
 
 		}
 
-		// Handles the mousedown event and sets the mouse down state.
-		protected _onMouseDown( ) {
+		// Handles the drag start event and sets the mouse down state.
+		protected _onDragStart( event: MouseEvent | TouchEvent ) {
 
-			this._isMouseDown = true;
+			this._isDragging = true;
+
+			if ( event instanceof TouchEvent ) {
+
+				const touch = event.touches[ 0 ];
+				if ( ! touch ) return;
+
+				this._lastTouchX = touch.clientX;
+				this._lastTouchY = touch.clientY;
+
+			}
 
 		}
 
-		// Handles the mouseup event and resets the mouse down state.
-		protected _onMouseUp( ) {
+		// Handles the drag end event and sets the mouse up state.
+		protected _onDragEnd( ) {
 
-			this._isMouseDown = false;
+			this._isDragging = false;
 
 		}
 
-		// Handles the mousemove event and update action states.
-		protected _onMouseMove( event: MouseEvent ) {
+		// Handles the drag move event and updates the action states.
+		protected _onDragMove( event: MouseEvent | TouchEvent ) {
 
-			if ( ! this._isMouseDown ) return;
+			if ( ! this._isDragging ) return;
+
+			let movementX = 0;
+			let movementY = 0;
+
+			if ( event instanceof MouseEvent ) {
+
+				movementX = event.movementX;
+				movementY = event.movementY;
+
+			} else if ( event instanceof TouchEvent ) {
+
+				const touch = event.touches[ 0 ];
+				if ( ! touch ) return;
+
+				movementX = touch.clientX - this._lastTouchX;
+				movementY = touch.clientY - this._lastTouchY;
+
+				this._lastTouchX = touch.clientX;
+				this._lastTouchY = touch.clientY;
+
+			}
+
 
 			this.dragXActions.forEach( ( action ) => {
 
-				this.actionStates[ action ] = event.movementX;
+				this.actionStates[ action ] = movementX;
 
 			} );
 
 			this.dragYActions.forEach( ( action ) => {
 
-				this.actionStates[ action ] = event.movementY;
+				this.actionStates[ action ] = movementY;
 
 			} );
 

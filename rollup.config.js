@@ -4,7 +4,6 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
 import terser from '@rollup/plugin-terser';
-import copy from 'rollup-plugin-copy';
 
 import serve from 'rollup-plugin-serve';
 import livereload from 'rollup-plugin-livereload';
@@ -40,11 +39,6 @@ export default {
 		babel( {
 			babelHelpers: 'bundled',
 			presets: [ '@babel/preset-env' ],
-		} ),
-		copy( {
-			targets: [
-				{ src: 'assets/**', dest: 'dist/assets' }
-			]
 		} ),
 		isDev &&
 			serve( {

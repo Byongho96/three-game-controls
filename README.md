@@ -2,8 +2,8 @@
 
 **Three Game Controls** is a lightweight and versatile game control library built on top of [three.js](https://threejs.org). It provides essential physics engine capabilities, including gravity and collision detection, and supports interactions through various input devices.
 
-- [Documentation](https://three-game-controls.vercel.app)
-- [Examples](https://three-game-controls.vercel.app/examples)
+- [Documentation](https://byongho96.github.io/three-game-controls/docs/#manual/Installation)
+- [Examples](https://byongho96.github.io/three-game-controls/examples/#first-person_keyboard_controls)
 - [Issues](https://github.com/Byongho96/three-game-controls/issues)
 
 
@@ -20,11 +20,11 @@
 
 :bulb: **three.js >= 0.139.0** is a prerequisite.
 
-
+* NPM
 ```bash
-npm install three-game-controls
+npm install three three-game-controls
 ```
-<!-- or
+or
 
 * CDN
 ```html
@@ -33,11 +33,10 @@ npm install three-game-controls
     "imports": {
       "three": "https://cdn.jsdelivr.net/npm/three@<version>/build/three.module.js",
       "three-game-controls": "https://cdn.jsdelivr.net/npm/three-game-controls@<version>/dist/bundle.esm.js"
-      "three-game-controls/assets/": "https://cdn.jsdelivr.net/npm/three-game-controls@<version>/dist/assets/" // if you need assets
     }
   }
 </script>
-``` -->
+```
 
 ## Usage
 
@@ -84,7 +83,7 @@ scene.add( directionalLight );
 let controls;
 
 const gltfLoader = new GLTFLoader();
-gltfLoader.setPath( 'https://byongho96.github.io/three-game-controls/dist/assets/' );
+gltfLoader.setPath( 'https://byongho96.github.io/three-game-controls/assets/' );
 
 gltfLoader.load( 'collision-world.glb', ( gltf ) => {
 
@@ -161,7 +160,7 @@ scene.add( directionalLight );
 let controls;
 
 const gltfLoader = new GLTFLoader();
-gltfLoader.setPath( 'https://byongho96.github.io/three-game-controls/dist/assets/' );
+gltfLoader.setPath( 'https://byongho96.github.io/three-game-controls/assets/' );
 
 Promise.all( [
   gltfLoader.loadAsync( 'collision-world.glb' ),
