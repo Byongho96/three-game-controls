@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/Byongho96/three-game-controls/compare/v1.0.0...v1.1.0) (2025-01-16)
+
+
+### Bug Fixes
+
+* modify to allow access to the Collider class ([06856d3](https://github.com/Byongho96/three-game-controls/commit/06856d3a4faf357fb54067e3f9956e60362a207e))
+
+
+### Features
+
+* supports touchevent on dragmixin ([#45](https://github.com/Byongho96/three-game-controls/issues/45)) ([716f3d8](https://github.com/Byongho96/three-game-controls/commit/716f3d80024afcd5ab348f92d7bdf4dde6e4deef))
+
 # 1.0.0 (2025-01-14)
 
 
