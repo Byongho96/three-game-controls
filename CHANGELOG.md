@@ -1,3 +1,15 @@
+# [1.2.0](https://github.com/Byongho96/three-game-controls/compare/v1.1.0...v1.2.0) (2025-01-16)
+
+
+### Bug Fixes
+
+* update landTolerance default value ([#49](https://github.com/Byongho96/three-game-controls/issues/49)) ([7e68fc2](https://github.com/Byongho96/three-game-controls/commit/7e68fc2a707248fc28ca2ab1e50b938d5a0a7640))
+
+
+### Features
+
+* create GyroMixin controllable via deviceOrientation ([#50](https://github.com/Byongho96/three-game-controls/issues/50)) ([f409640](https://github.com/Byongho96/three-game-controls/commit/f409640d83cba2e5abf1b953c0a5469b33d21130))
+
 # [1.1.0](https://github.com/Byongho96/three-game-controls/compare/v1.0.0...v1.1.0) (2025-01-16)
 
 
