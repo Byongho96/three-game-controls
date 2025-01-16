@@ -17,3 +17,4 @@ export * from './math/Collider';
 export * from './mixins/DragMixin';
 export * from './mixins/KeyboardMixin';
 export * from './mixins/PointerLockMixin';
+export * from './mixins/GyroMixin';

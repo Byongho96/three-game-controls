@@ -37,6 +37,7 @@
 
     "Mixins": {
       "DragMixin": "api/mixins/DragMixin",
+      "GyroMixin": "api/mixins/GyroMixin",
       "KeyboardMixin": "api/mixins/KeyboardMixin",
       "PointerLockMixin": "api/mixins/PointerLockMixin"
     }

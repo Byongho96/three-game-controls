@@ -8,6 +8,7 @@
   "ThirdPerson": [
     "third-person_keyboard_controls",
     "third-person_mousedrag_controls",
-    "third-person_pointerlock_controls"
+    "third-person_pointerlock_controls",
+    "third-person_gyroscope_mixins"
   ]
 }
