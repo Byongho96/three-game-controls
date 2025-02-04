@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<base href="../../" />
+		<script src="page.js"></script>
+		<link type="text/css" rel="stylesheet" href="page.css" />
+	</head>
+	<body>
+		<h1>[name]</h1>
+
+		<p class="desc">
+			A Bounding Volume Hierarchy (BVH) used for spatial partitioning and efficient intersection tests with rays and capsules.
+		</p>
+
+		<h2>Constructor</h2>
+
+		<h3>[name]( [3param:https://threejs.org/docs/#api/en/math/Box3 box] )</h3>
+		<p>
+			[3page:https://threejs.org/docs/#api/en/math/Box3 box] — (optional) A bounding box to initialize the BVH with.<br/>
+		</p>
+
+		<h2>Properties</h2>
+
+		<h3>[3property:https://threejs.org/docs/#api/en/math/Box3 box]</h3>
+		<p>
+			The bounding box of this BVH node used for intersection tests. Default is `new THREE.Box3()`.
+		</p>
+		
+		<h3>[3property:https://threejs.org/docs/#api/en/math/Box3 bounds]</h3>
+		<p>
+			The min-max bounds of all the triangles in the BVH. Default is `new THREE.Box3()`.
+		</p>
+
+		<h3>[property:number depth]</h3>
+		<p>
+			The maximum depth of the BVH tree. This is used to limit the recursion depth when building the BVH. Up to (2 ** depth) BVH leaf nodes can be created. Default is `48`.
+		</p>
+
+		<h3>[property:number duplicationThreshold]</h3>
+		<p>
+			The threshold value determines whether a triangle is duplicated across sub-BVH nodes.
+			If a triangle's size exceeds this threshold, it is stored in multiple sub-BVH nodes.
+			If it is smaller, it is assigned to the closest sub-BVH node based on its center position.
+			A larger threshold reduces duplication, improving search efficiency but lowering collision accuracy. The default is `0.01`.
+		</p>
+
+		<h3>[3property:https://threejs.org/docs/#api/en/core/Layers layer]</h3>
+		<p>
+			The layers (bitmask) this BVH should consider. Default is `new THREE.Layers()`.
+		</p>
+
+		<h3>[property:BVH maxVolume]</h3>
+		<p>
+			The sub-BVH node containing the maximum volume among split regions. Default is `null`.
+		</p>
+
+		<h3>[property:BVH minVolume]</h3>
+		<p>
+			The sub-BVH node containing the minimum volume among split regions. Default is `null`.
+		</p>
+		
+		<h3>[property:Array triangles]</h3>
+		<p>
+			[link:https://threejs.org/docs/#api/en/math/Triangle Triangles] directly stored at this volume. If this volume has sub-volumes, this will be empty. Default is `[]`.
+		</p>
+
+		<h2>Methods</h2>
+
+		<h3>[method:undefined addTriangle]( [3param:https://threejs.org/docs/#api/en/math/Triangle triangle] )</h3>
+		<p>
+			Adds a triangle to this BVH node, expanding its bounds if necessary.
+		</p>
+
+		<h3>[method:undefined calcBox]()</h3>
+		<p>
+			Calculates the bounding box of this BVH node based on stored triangles. Should be used after adding triangles.
+		</p>
+
+		<h3>[method:undefined optimizeBox]()</h3>
+		<p>
+			Optimizes the bounding box to fit within the parent node's bounds. Should be called after setting the box size.
+		</p>
+
+		<h3>[method:undefined split]( [param:number level] )</h3>
+		<p>
+			level — The current depth of recursion (used to limit max depth).
+			<br /><br />
+			Recursively splits the BVH node into two child nodes along the largest axis, distributing triangles into sub-volumes.
+		</p>
+
+		<h3>[method:undefined build]()</h3>
+		<p>
+			Builds the BVH by recursively splitting the node until reaching the maximum depth. Should be used after adding triangles.
+		</p>
+
+		<h3>[method:undefined buildFromObject]( [3param:https://threejs.org/docs/#api/en/core/Object3D group] )</h3>
+		<p>
+			[3page:https://threejs.org/docs/#api/en/core/Object3D group] — The root `Object3D` to traverse.
+			<br /><br />
+			Builds a BVH from an `Object3D` hierarchy. It collects triangles from meshes within the specified layers and constructs a BVH.
+		</p>
+
+		<h3>[method:Object rayIntersect]( [3param:https://threejs.org/docs/#api/en/math/Ray Ray] )</h3>
+		<p>
+			[3page:https://threejs.org/docs/#api/en/math/Ray Ray] — The ray to test against the BVH.
+			<br /><br />
+			Performs a ray intersection test against the BVH. Returns an object containing the closest intersection point, distance, and intersected triangle. Otherwise, returns `false`.
+			<code>
+			{ distance: number; triangle: Triangle; position: Vector3 }
+			</code>
+		</p>
+
+		<h3>[method:Object capsuleIntersect]( [3param:https://github.com/mrdoob/three.js/blob/master/examples/jsm/math/Capsule.js capsule] )</h3>
+		<p>
+			[3page:https://github.com/mrdoob/three.js/blob/master/examples/jsm/math/Capsule.js capsule] — The capsule to test against the BVH.
+			<br /><br />
+			Returns an object containing the intersection normal and penetration depth, or false if no intersection is found.
+			<code>
+			{ normal: Vector3, depth: number }
+			</code>
+		</p>
+
+		<h2>Source</h2>
+
+		<p>[link:https://github.com/Byongho96/three-game-controls/blob/master/src/math/BVH.ts math/BVH.ts]</p>  
+	</body>
+</html>

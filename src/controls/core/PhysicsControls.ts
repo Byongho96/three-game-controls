@@ -1,6 +1,6 @@
 import { Ray, Vector3, Controls, type Object3D, Quaternion } from 'three';
-import { Octree } from 'three/examples/jsm/math/Octree.js';
-import { Collider } from '../../math/Collider.js';
+import { BVH } from '../../math/BVH';
+import { Collider } from '../../math/Collider';
 
 
 export interface PhysicsControlsEventMap {
@@ -11,13 +11,12 @@ export interface PhysicsControlsEventMap {
 
 const _collideEvent = { type: 'collide' as const };
 
-
 class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 
-	private _world: Object3D | null;
+	private _world: Object3D | null = null;
 
-	/** Octree structure of the world object for collision detection. */
-	worldOctree: Octree = new Octree();
+	/** BVH structure of the world object for collision detection. */
+	worldBVH: BVH = new BVH();
 
 	/** Gravitational force applied to the object.
 	 * @default 30
@@ -116,8 +115,7 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 
 		super( object, domElement );
 
-		this._world = world;
-		if ( world ) this.worldOctree.fromGraphNode( world );
+		this.world = world;
 
 	}
 
@@ -137,7 +135,13 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 	set world( world: Object3D | null ) {
 
 		this._world = world;
-		if ( world ) this.worldOctree.fromGraphNode( world );
+
+		if ( world ) {
+
+			this.worldBVH.clear();
+			this.worldBVH.buildFromObject( world );
+
+		}
 
 	}
 
@@ -176,7 +180,7 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 
 		this._isGrounded = false;
 
-		const collisionResult = this.worldOctree.capsuleIntersect( this.collider );	// Check for collisions with the world octree.
+		const collisionResult = this.worldBVH.capsuleIntersect( this.collider );	// Check for collisions with the world octree.
 
 		if ( ! collisionResult ) return;
 
@@ -204,7 +208,9 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 		if ( this._isGrounded || this.velocity.y >= 0 ) return;
 
 		this._ray.origin.copy( this.collider.start ).y -= this.collider.radius;
-		const rayResult = this.worldOctree.rayIntersect( this._ray );
+		const rayResult = this.worldBVH.rayIntersect( this._ray );
+
+		if ( ! rayResult ) return;
 
 		const t1 = Math.min( ( this.maxFallSpeed + this.velocity.y ) / this.gravity, this.landTimeThreshold );
 		const d1 = ( - this.velocity.y + 0.5 * this.gravity * t1 ) * t1;
@@ -278,6 +284,15 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 		this._colliderLocalPosition.y -= this.collider.radius;
 		if ( this.object.parent ) this.object.parent.worldToLocal( this._colliderLocalPosition );
 		this.object.position.copy( this._colliderLocalPosition );
+
+
+	}
+
+	dispose() {
+
+		super.dispose();
+
+		this.worldBVH.clear();
 
 	}
 
