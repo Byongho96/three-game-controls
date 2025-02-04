@@ -1,3 +1,11 @@
+# [1.3.0](https://github.com/Byongho96/three-game-controls/compare/v1.2.0...v1.3.0) (2025-02-04)
+
+
+### Features
+
+* apply BVH to PhysicsControls ([d36cb38](https://github.com/Byongho96/three-game-controls/commit/d36cb38bc07a206b2d06da7cb88ab2377e1a3918))
+* implement BVH class for optimized spatial complexity ([19b79f7](https://github.com/Byongho96/three-game-controls/commit/19b79f7f739b33470dccbff3170330bbe7a5b9e1))
+
 # [1.2.0](https://github.com/Byongho96/three-game-controls/compare/v1.1.0...v1.2.0) (2025-01-16)
 
 
