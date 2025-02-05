@@ -11,9 +11,12 @@ import { Capsule } from 'three/examples/jsm/math/Capsule.js';
 import { triangleCapsuleIntersect } from '../utils/math.js';
 
 const _v1 = new Vector3();
+const _v2 = new Vector3();
 
 const _capsule = new Capsule();
 
+let cnt = 0;
+let num = 0;
 class BVH {
 
 	/** The bounding box of this BVH node used for intersection tests.
@@ -31,11 +34,6 @@ class BVH {
 	 */
 	depth: number = 48;
 
-	/** The threshold triangle size used to determine duplication at boundaries. Triangles larger than this value may be duplicated across sub-BVH nodes.
-	 * @default 0.01
-	 */
-	duplicationThreshold: number = 0.01;
-
 	/** Which layers (bitmask) this BVH should consider.
 	 * @default new THREE.Layers()
 	 */
@@ -44,12 +42,12 @@ class BVH {
 	/** The sub-BVH node that contains the minimum volume among the split regions.
 	 * @default null
 	 */
-	minVolume: BVH | null = null;
+	leftVolume: BVH | null = null;
 
 	/** The sub-BVH node that contains the maximum volume among the split regions.
 	 * @default null
 	 */
-	maxVolume: BVH | null = null;
+	rightVolume: BVH | null = null;
 
 	/** Triangles directly stored at this volume. If this volume has sub-volumes, this will be empty.
 	 * @default []
@@ -96,26 +94,12 @@ class BVH {
 	}
 
 	/**
-	 * Optimizes the bounding box of this node to fit within the bounds of the parent node. Use this after the size of the box is determined.
-	 */
-	optimizeBox(): void {
-
-		this.box.min.x = Math.max( this.box.min.x, this.bounds.min.x );
-		this.box.min.y = Math.max( this.box.min.y, this.bounds.min.y );
-		this.box.min.z = Math.max( this.box.min.z, this.bounds.min.z );
-		this.box.max.x = Math.min( this.box.max.x, this.bounds.max.x );
-		this.box.max.y = Math.min( this.box.max.y, this.bounds.max.y );
-		this.box.max.z = Math.min( this.box.max.z, this.bounds.max.z );
-
-	}
-
-	/**
 	 * Recursively splits this node into two child BVHs along the largest axis, distributing triangles into sub-volumes.
 	 * @param {number} level - Current depth of recursion (used to limit max depth).
 	 */
 	split( level: number ): void {
 
-		this.optimizeBox();
+		// this.optimizeBox();
 
 		const size = this.box.getSize( _v1 );
 
@@ -132,77 +116,129 @@ class BVH {
 
 		}
 
-		// Create sub-volumes along the split axis
-		const splitPoint = this.box.getCenter( _v1 )[ splitAxis ];
+		// Create bins along
+		const binCount = Math.floor( 16 - ( level / 4 ) );
+		const bins = new Array( binCount ).fill( 0 ).map( () => ( { triangles: [] as Triangle[], bounds: new Box3() } ) );
 
-		const minVolume = new BVH( this.box.clone() );
-		minVolume.depth = this.depth;
-		minVolume.duplicationThreshold = this.duplicationThreshold;
-		minVolume.box.max[ splitAxis ] = splitPoint;
-
-		const maxVolume = new BVH( this.box.clone() );
-		maxVolume.depth = this.depth;
-		maxVolume.duplicationThreshold = this.duplicationThreshold;
-		maxVolume.box.min[ splitAxis ] = splitPoint;
-
-		// Distribute triangles into sub-volumes
+		// Distribute triangles into bins
 		let triangle: Triangle | undefined = this.triangles.pop();
 
 		while ( triangle ) {
 
-			if ( triangle.getArea() > this.duplicationThreshold ) {
+			const center = triangle.getMidpoint( _v2 )[ splitAxis ];
 
-				// Duplicate a triangle that cross the boundary
+			let binIndex = Math.floor( ( center - this.box.min[ splitAxis ] ) / size[ splitAxis ] * binCount );
 
-				if ( minVolume.box.intersectsTriangle( triangle ) ) minVolume.addTriangle( triangle );
+			if ( binIndex > binCount - 1 ) binIndex = binCount - 1;
+			if ( binIndex < 0 ) binIndex = 0;
 
-				if ( maxVolume.box.intersectsTriangle( triangle ) ) maxVolume.addTriangle( triangle );
+			bins[ binIndex ].triangles.push( triangle );
 
-			} else {
-
-				// Assign a triangle to a sub-volume based on the center of the triangle
-
-				const center = triangle.getMidpoint( _v1 )[ splitAxis ];
-
-				if ( center < splitPoint ) {
-
-					minVolume.addTriangle( triangle );
-
-				} else {
-
-					maxVolume.addTriangle( triangle );
-
-				}
-
-			}
+			bins[ binIndex ].bounds.min.x = Math.min( bins[ binIndex ].bounds.min.x, triangle.a.x, triangle.b.x, triangle.c.x );
+			bins[ binIndex ].bounds.min.y = Math.min( bins[ binIndex ].bounds.min.y, triangle.a.y, triangle.b.y, triangle.c.y );
+			bins[ binIndex ].bounds.min.z = Math.min( bins[ binIndex ].bounds.min.z, triangle.a.z, triangle.b.z, triangle.c.z );
+			bins[ binIndex ].bounds.max.x = Math.max( bins[ binIndex ].bounds.max.x, triangle.a.x, triangle.b.x, triangle.c.x );
+			bins[ binIndex ].bounds.max.y = Math.max( bins[ binIndex ].bounds.max.y, triangle.a.y, triangle.b.y, triangle.c.y );
+			bins[ binIndex ].bounds.max.z = Math.max( bins[ binIndex ].bounds.max.z, triangle.a.z, triangle.b.z, triangle.c.z );
 
 			triangle = this.triangles.pop();
 
 		}
 
-		// Assign the min and max volumes to this node
-		if ( minVolume.triangles.length > 0 ) {
+		// Calculate bounds for each bin
+		const leftBounds = new Array( binCount ).fill( 0 ).map( () => ( new Box3() ) );
+		const rightBounds = new Array( binCount ).fill( 0 ).map( () => ( new Box3() ) );
 
-			this.minVolume = minVolume;
+		leftBounds[ 0 ].copy( bins[ 0 ].bounds );
+		rightBounds[ binCount - 1 ].copy( bins[ binCount - 1 ].bounds );
+
+		for ( let i = 1; i < binCount; i ++ ) {
+
+			leftBounds[ i ].union( leftBounds[ i - 1 ] );
+			leftBounds[ i ].union( bins[ i - 1 ].bounds );
+
+			rightBounds[ binCount - i - 1 ].union( rightBounds[ binCount - i ] );
+			rightBounds[ binCount - i - 1 ].union( bins[ binCount - i - 1 ].bounds );
 
 		}
 
-		if ( maxVolume.triangles.length > 0 ) {
 
-			this.maxVolume = maxVolume;
+		// SAH cost calculation for the bins
+		// https://www.sci.utah.edu/~wald/Publications/2007/ParallelBVHBuild/fastbuild.pdf
+		let bestIndex = - 1;
+		let bestCost = Infinity;
+
+		let N_L = 0;
+		let N_R = this.triangles.length;
+
+		for ( let i = 0; i < binCount - 1; i ++ ) {
+
+			N_L += bins[ i ].triangles.length;
+			N_R -= bins[ i ].triangles.length;
+
+			leftBounds[ i ].getSize( _v2 );
+			const A_L = _v2.x * _v2.y + _v2.y * _v2.z + _v2.z * _v2.x;
+
+			rightBounds[ i ].getSize( _v2 );
+			const A_R = _v2.x * _v2.y + _v2.y * _v2.z + _v2.z * _v2.x;
+
+			const cost = N_L * A_L + N_R * A_R;
+
+			if ( cost < bestCost ) {
+
+				bestIndex = i;
+				bestCost = cost;
+
+			}
+
+		}
+
+		// Create sub-volumes based on the best split
+		const leftVolume = new BVH( leftBounds[ bestIndex ] );
+		leftVolume.depth = this.depth;
+		leftVolume.triangles = bins.reduce( ( acc, bin, i ) => i < bestIndex ? acc.concat( bin.triangles ) : acc, [] as Triangle[] );
+
+		const rightVolume = new BVH( rightBounds[ bestIndex ] );
+		rightVolume.depth = this.depth;
+		rightVolume.triangles = bins.reduce( ( acc, bin, i ) => i >= bestIndex ? acc.concat( bin.triangles ) : acc, [] as Triangle[] );
+
+		// Assign the min and max volumes to this node
+		if ( leftVolume.triangles.length > 0 ) {
+
+			this.leftVolume = leftVolume;
+
+		}
+
+		if ( rightVolume.triangles.length > 0 ) {
+
+			this.rightVolume = rightVolume;
 
 		}
 
 		// Recursively split the sub-volumes
-		if ( minVolume.triangles.length > 8 && level < this.depth ) {
+		if ( leftVolume.triangles.length > 8 && level < this.depth ) {
 
-			minVolume.split( level + 1 );
+			leftVolume.split( level + 1 );
 
 		}
 
-		if ( maxVolume.triangles.length > 8 && level < this.depth ) {
+		if ( rightVolume.triangles.length > 8 && level < this.depth ) {
 
-			maxVolume.split( level + 1 );
+			rightVolume.split( level + 1 );
+
+		}
+
+		if ( ( rightVolume.triangles.length > 0 && leftVolume.triangles.length < 9 ) || level === this.depth - 1 ) {
+
+			cnt += rightVolume.triangles.length;
+			num ++;
+
+		}
+
+		if ( ( leftVolume.triangles.length > 0 && rightVolume.triangles.length < 9 ) || level === this.depth - 1 ) {
+
+			cnt += leftVolume.triangles.length;
+			num ++;
 
 		}
 
@@ -273,46 +309,48 @@ class BVH {
 
 		} );
 
+		console.log( this.triangles.length );
 		this.build();
+		console.log( cnt, num );
 
 	}
 
 	// Collects all triangles that intersect with the given ray.
 	protected _getRayTriangles( ray: Ray, triangles: Triangle[] ): void {
 
-		// minVolume check
-		if ( this.minVolume && ray.intersectsBox( this.minVolume.box ) ) {
+		// leftVolume check
+		if ( this.leftVolume && ray.intersectsBox( this.leftVolume.box ) ) {
 
-			if ( this.minVolume.triangles.length > 0 ) {
+			if ( this.leftVolume.triangles.length > 0 ) {
 
-				for ( let j = 0; j < this.minVolume.triangles.length; j ++ ) {
+				for ( let j = 0; j < this.leftVolume.triangles.length; j ++ ) {
 
-					if ( triangles.indexOf( this.minVolume.triangles[ j ] ) === - 1 ) triangles.push( this.minVolume.triangles[ j ] );
+					if ( triangles.indexOf( this.leftVolume.triangles[ j ] ) === - 1 ) triangles.push( this.leftVolume.triangles[ j ] );
 
 				}
 
 			} else {
 
-				this.minVolume._getRayTriangles( ray, triangles );
+				this.leftVolume._getRayTriangles( ray, triangles );
 
 			}
 
 		}
 
-		// maxVolume check
-		if ( this.maxVolume && ray.intersectsBox( this.maxVolume.box ) ) {
+		// rightVolume check
+		if ( this.rightVolume && ray.intersectsBox( this.rightVolume.box ) ) {
 
-			if ( this.maxVolume.triangles.length > 0 ) {
+			if ( this.rightVolume.triangles.length > 0 ) {
 
-				for ( let j = 0; j < this.maxVolume.triangles.length; j ++ ) {
+				for ( let j = 0; j < this.rightVolume.triangles.length; j ++ ) {
 
-					if ( triangles.indexOf( this.maxVolume.triangles[ j ] ) === - 1 ) triangles.push( this.maxVolume.triangles[ j ] );
+					if ( triangles.indexOf( this.rightVolume.triangles[ j ] ) === - 1 ) triangles.push( this.rightVolume.triangles[ j ] );
 
 				}
 
 			} else {
 
-				this.maxVolume._getRayTriangles( ray, triangles );
+				this.rightVolume._getRayTriangles( ray, triangles );
 
 			}
 
@@ -323,39 +361,39 @@ class BVH {
 	// Collects all triangles that intersect the given capsule's bounding box.
 	protected _getCapsuleTriangles( capsule: Capsule, triangles: Triangle[] ): void {
 
-		// minVolume check
-		if ( this.minVolume && capsule.intersectsBox( this.minVolume.box ) ) {
+		// leftVolume check
+		if ( this.leftVolume && capsule.intersectsBox( this.leftVolume.box ) ) {
 
-			if ( this.minVolume.triangles.length > 0 ) {
+			if ( this.leftVolume.triangles.length > 0 ) {
 
-				for ( let j = 0; j < this.minVolume.triangles.length; j ++ ) {
+				for ( let j = 0; j < this.leftVolume.triangles.length; j ++ ) {
 
-					if ( triangles.indexOf( this.minVolume.triangles[ j ] ) === - 1 ) triangles.push( this.minVolume.triangles[ j ] );
+					if ( triangles.indexOf( this.leftVolume.triangles[ j ] ) === - 1 ) triangles.push( this.leftVolume.triangles[ j ] );
 
 				}
 
 			} else {
 
-				this.minVolume._getCapsuleTriangles( capsule, triangles );
+				this.leftVolume._getCapsuleTriangles( capsule, triangles );
 
 			}
 
 		}
 
-		// maxVolume check
-		if ( this.maxVolume && capsule.intersectsBox( this.maxVolume.box ) ) {
+		// rightVolume check
+		if ( this.rightVolume && capsule.intersectsBox( this.rightVolume.box ) ) {
 
-			if ( this.maxVolume.triangles.length > 0 ) {
+			if ( this.rightVolume.triangles.length > 0 ) {
 
-				for ( let j = 0; j < this.maxVolume.triangles.length; j ++ ) {
+				for ( let j = 0; j < this.rightVolume.triangles.length; j ++ ) {
 
-					if ( triangles.indexOf( this.maxVolume.triangles[ j ] ) === - 1 ) triangles.push( this.maxVolume.triangles[ j ] );
+					if ( triangles.indexOf( this.rightVolume.triangles[ j ] ) === - 1 ) triangles.push( this.rightVolume.triangles[ j ] );
 
 				}
 
 			} else {
 
-				this.maxVolume._getCapsuleTriangles( capsule, triangles );
+				this.rightVolume._getCapsuleTriangles( capsule, triangles );
 
 			}
 
@@ -457,8 +495,8 @@ class BVH {
 		this.box.makeEmpty();
 		this.bounds.makeEmpty();
 
-		this.minVolume = null;
-		this.maxVolume = null;
+		this.leftVolume = null;
+		this.rightVolume = null;
 
 		this.triangles = [];
 
