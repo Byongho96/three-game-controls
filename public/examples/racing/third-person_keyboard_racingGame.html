@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+	<head>
+    <title>Physics Character Controls - Supported by Three.js</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <link type="text/css" rel="stylesheet" href="../main.css" />
+    <link type="text/css" rel="stylesheet" href="./styles.css" />
+	</head>
+	<body>
+    <div id="info">
+		<br />
+		You can move using WASD or arrow keys, and accelerate with the Shift key.
+    </div>
+	<div id="speedometer_container">
+		<div id="wrapper">
+			<div id="speedometer"></div>
+			<div id="needle"></div>
+			<div id="center">
+				<span id="velocity">0</span>
+				<span>km/h</span>
+			</div>
+		</div>
+	</div>
+	<div id="timelaps-container">
+		<div id="lap-timer" class="timelap">
+			<div class="timelap-title">TIME</div>
+			<div class="timelap-content">00:00.000</div>
+		</div>
+		<div id="best-timer" class="timelap">
+			<div class="timelap-title">BEST</div>
+			<div class="timelap-content">00:00.000</div>
+		</div>
+	</div>
+    <div id="container"></div>
+
+    <script type="importmap">
+		{
+			"imports": {
+				"three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
+				"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/",
+				"three-game-controls": "../../dist/bundle.esm.js"
+			}
+		}
+	</script>
+	<script type="module">
+	import * as THREE from 'three';
+
+	import Stats from 'three/addons/libs/stats.module.js';
+
+	import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+
+	import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+	import { TPKeyboardControls, Collider } from 'three-game-controls';
+
+	const container = document.getElementById( 'container' );
+
+	const clock = new THREE.Clock();
+
+	let lapStartTime = 0;
+	let bestTime = 0;
+
+	const gltfLoader = new GLTFLoader();
+
+	let controls;
+	let helpers;
+
+	const finishLineBox = new THREE.Box3();
+	const carBox = new THREE.Box3();
+
+	Promise.all( [
+		gltfLoader.loadAsync( '../assets/models/raceway_map.glb' ),
+		gltfLoader.loadAsync( '../assets/models/stylized_racing_car.glb' ),
+	] ).then( ( [ world, car ] ) => {
+
+		scene.add( world.scene );
+
+		world.scene.traverse( child => {
+
+			if ( child.isMesh ) {
+
+				child.castShadow = true;
+				child.receiveShadow = true;
+
+			}
+
+		} );
+		world.scene.rotation.set( 0, Math.PI, 0 );
+		world.scene.scale.set( 100, 100, 100 );
+		world.scene.position.set( 40, - 10, 15 );
+		world.scene.updateMatrixWorld( true );
+
+		scene.add( car.scene );
+		car.scene.position.set( 0, 0, 0 );
+		car.scene.scale.set( 0.7, 0.7, 0.7 );
+		car.scene.traverse( child => {
+
+			if ( child.isMesh ) {
+
+				child.castShadow = true;
+				child.receiveShadow = true;
+	
+			}
+
+		} );
+
+		controls = new TPKeyboardControls( car.scene, renderer.domElement, world.scene.getObjectByName( 'Mesh_Raceway_Collision' ), {
+			'MOVE_FORWARD': car.animations[ 0 ],
+		}, camera );
+		controls.cameraPositionOffset = new THREE.Vector3( 0, 2, - 5 );
+		controls.enableZoom = false;
+		controls.syncAxisWithCamera = 'ALWAYS';
+		controls.enableRotationOnMove = false;
+		controls.groundedMoveSpeed = 100;
+		controls.cameraLerpFactor = 0.2;
+		controls.collider = new Collider( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, 0 ), 1 );
+		controls.keyToActions = {
+			'KeyW': [ 'MOVE_FORWARD' ],
+			'KeyS': [ 'MOVE_BACKWARD' ],
+			'KeyA': [ 'ROTATE_LEFT' ],
+			'KeyD': [ 'ROTATE_RIGHT' ],
+			'ShiftLeft': [ 'ACCELERATE' ],
+			'ArrowUp': [ 'MOVE_FORWARD' ],
+			'ArrowDown': [ 'MOVE_BACKWARD' ],
+			'ArrowRight': [ 'ROTATE_RIGHT' ],
+			'ArrowLeft': [ 'ROTATE_LEFT' ]
+		};
+
+
+	} );
+
+	new RGBELoader()
+		.setPath( '../assets/HDRIs/' )
+		.load( 'racingGameHDRI.hdr', function ( texture ) {
+
+			texture.mapping = THREE.EquirectangularReflectionMapping;
+
+			scene.background = texture;
+			scene.environment = texture;
+
+		} );
+
+	// Scene
+	const scene = new THREE.Scene();
+	scene.background = new THREE.Color( 0x88ccee );
+
+	// Camera
+	const camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 1000 );
+	camera.rotation.order = 'YXZ';
+
+	// Light
+	const directionalLight = new THREE.DirectionalLight( 0xffffff, 2.5 );
+	directionalLight.position.set( - 5, 25, - 1 );
+	directionalLight.castShadow = true;
+	directionalLight.shadow.camera.near = 0.01;
+	directionalLight.shadow.camera.far = 500;
+	directionalLight.shadow.camera.right = 30;
+	directionalLight.shadow.camera.left = - 30;
+	directionalLight.shadow.camera.top = 30;
+	directionalLight.shadow.camera.bottom = - 30;
+	directionalLight.shadow.mapSize.width = 1024;
+	directionalLight.shadow.mapSize.height = 1024;
+	directionalLight.shadow.radius = 4;
+	directionalLight.shadow.bias = - 0.00006;
+	scene.add( directionalLight );
+
+	// Renderer
+	const renderer = new THREE.WebGLRenderer( { antialias: true } );
+	renderer.setPixelRatio( window.devicePixelRatio );
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.setAnimationLoop( animate );
+	renderer.shadowMap.enabled = true;
+	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+	renderer.toneMapping = THREE.ACESFilmicToneMapping;
+	container.appendChild( renderer.domElement );
+
+	// Finish line collider
+	const geometry = new THREE.BoxGeometry( 12, 1, 1 );
+	const material = new THREE.MeshBasicMaterial( { opacity: 0, transparent: true } );
+	const finishLine = new THREE.Mesh( geometry, material );
+	finishLine.position.set( 1, - 10, 11.5 );
+	finishLine.geometry.computeBoundingBox();
+	finishLineBox.setFromObject( finishLine );
+	scene.add( finishLine );
+
+	// Stats
+	const stats = new Stats();
+	stats.domElement.style.position = 'absolute';
+	stats.domElement.style.top = '0px';
+	container.appendChild( stats.domElement );
+
+	const velocity = new THREE.Vector3();
+	let prevV = 0;
+
+	let checkPointList = [];
+	const checkPointPositionList = [
+		new THREE.Vector3( 2, - 10, 30.6 ),
+		new THREE.Vector3( 63.2, - 9.12, 21.3 ),
+		new THREE.Vector3( 23.8, - 3.89, 27.7 ),
+		new THREE.Vector3( 25.98, - 9.55, - 11.94 )
+	];
+
+	function animate() {
+
+		const delta = Math.min( 0.05, clock.getDelta() );
+
+		controls && controls.update( delta );
+
+		controls && rotateToMatchSurface( 'Mesh_Raceway_Collision_Rework_24_-_Default_0' );
+
+		controls && setSpeedometer( );
+
+		controls && updateLapProgress();
+
+		setLapTimer();
+
+		helpers && helpers.update();
+
+		renderer.render( scene, camera );
+
+		stats.update();
+
+	}
+
+	function setLapTimer() {
+
+		const lapTimer = document.querySelector( '#lap-timer .timelap-content' );
+		if ( lapStartTime !== 0 && lapTimer ) {
+
+			const elapsedTime = ( clock.getElapsedTime() - lapStartTime ).toFixed( 3 );
+			lapTimer.textContent = formatTime( elapsedTime );
+	
+		}
+	
+	}
+
+	function setBestTimer() {
+
+		const bestTimer = document.querySelector( '#best-timer .timelap-content' );
+		if ( bestTimer ) {
+
+			bestTimer.textContent = formatTime( bestTime );
+	
+		}
+	
+	}
+
+	// Format time in seconds to MM:SS.SSS
+
+	function formatTime( seconds ) {
+
+		const minutes = Math.floor( seconds / 60 );
+		const secs = Math.floor( seconds % 60 );
+		const millis = Math.floor( ( seconds % 1 ) * 1000 );
+
+		return `${String( minutes ).padStart( 2, '0' )}:${String( secs ).padStart( 2, '0' )}.${String( millis ).padStart( 3, '0' )}`;
+
+	}
+
+	function startLapTimer() {
+
+		if ( lapStartTime !== 0 ) return;
+	
+		lapStartTime = clock.getElapsedTime();
+	
+	}
+
+	function stopLapTimer() {
+
+		if ( lapStartTime === 0 ) return;
+
+		const lapEndTime = clock.getElapsedTime();
+		const lapTime = ( lapEndTime - lapStartTime ).toFixed( 2 );
+
+		// Set best time if it is the first lap or the lap time is better than the best time
+
+		if ( bestTime === 0 || lapTime <= bestTime ) {
+
+			bestTime = lapTime;
+			setBestTimer( formatTime( lapTime ) );
+	
+		}
+
+		lapStartTime = 0;
+
+	}
+
+	function validateCheckpoint( checkPointPosition, radius, number ) {
+
+		// Check if the car has passed the checkpoint ( within the radius )
+	
+		if ( controls.object.position.distanceTo( checkPointPosition ) < radius ) {
+
+			if ( checkPointList.length === 0 || checkPointList[ checkPointList.length - 1 ] < number ) {
+	
+				checkPointList.push( number );
+	
+			}
+
+		}
+	
+	}
+
+	function updateLapProgress() {
+
+		carBox.setFromObject( controls.object );
+
+		// Check if the car has passed the finish line
+
+		if ( carBox.intersectsBox( finishLineBox ) ) {
+
+			startLapTimer();
+
+			// Check if the car has passed all checkpoints
+
+			if ( checkPointList.length === checkPointPositionList.length && checkPointList.every( ( num, i ) => num === i ) ) {
+
+				stopLapTimer();
+
+			}
+
+			checkPointList = [];
+	
+		}
+
+		for ( let i = 0; i < checkPointPositionList.length; i ++ ) {
+
+			validateCheckpoint( checkPointPositionList[ i ], 5.5, i );
+
+		}
+
+	}
+
+	function setSpeedometer() {
+
+		controls.getLocalVelocity( velocity );
+
+		const needle = document.getElementById( 'needle' );
+
+		const v = Math.max( ( velocity.z / 5 ) * 40, 0 );
+
+		const velocityNumber = document.getElementById( 'velocity' );
+
+		// Prevent the needle from vibrating when the speed is constant
+		if ( Math.abs( v - prevV ) < 10 ) return;
+
+		velocityNumber.textContent = Math.round( v );
+
+		needle.style.setProperty( '--angle', `${v}deg` );
+
+		prevV = v;
+
+	}
+
+	// Adjusts the object's rotation to align with the surface it is on.
+
+	function rotateToMatchSurface( colliderObjectName ) {
+
+		const raycaster = new THREE.Raycaster();
+		raycaster.set( controls.object.position, new THREE.Vector3( 0, - 1, 0 ) );
+
+		const intersects = raycaster.intersectObjects( scene.children, true );
+		if ( intersects.length > 0 ) {
+
+			for ( const intersect of intersects ) {
+
+				if ( intersect.object.name === colliderObjectName && intersect.distance < 0.1 ) {
+
+					const normal = intersect.face.normal.clone();
+	
+					const normalMatrix = new THREE.Matrix3().getNormalMatrix( intersect.object.matrixWorld );
+
+					normal.applyMatrix3( normalMatrix ).normalize();
+
+					const euler = controls.object.rotation.clone();
+
+					const up = new THREE.Vector3( 0, 1, 0 );
+
+					const quaternion = new THREE.Quaternion();
+					quaternion.setFromUnitVectors( up, normal );
+					const quaternion2 = new THREE.Quaternion().setFromAxisAngle( up, euler.y );
+					quaternion.multiply( quaternion2 );
+
+					controls.object.quaternion.copy( quaternion );
+
+				}
+
+			}
+
+		}
+
+	}
+
+
+	function onWindowResize() {
+
+		camera.aspect = window.innerWidth / window.innerHeight;
+		camera.updateProjectionMatrix();
+
+		renderer.setSize( window.innerWidth, window.innerHeight );
+
+	}
+
+	window.addEventListener( 'resize', onWindowResize );
+
+	// Dispose function
+	function dispose() {
+
+		renderer.setAnimationLoop( null );
+
+		window.removeEventListener( 'resize', onWindowResize );
+
+		controls && controls.disconnect();
+		helpers && helpers.dispose();
+		renderer.dispose();
+
+		// Dispose of scene objects
+		scene.traverse( object => {
+
+			if ( object.isMesh ) {
+
+				object.geometry.dispose();
+
+				if ( Array.isArray( object.material ) ) {
+
+					object.material.forEach( material => material.dispose() );
+
+				} else if ( object.material ) {
+
+					object.material.dispose();
+
+				}
+
+			}
+
+		} );
+
+		// Remove renderer DOM element
+		if ( renderer.domElement && renderer.domElement.parentNode ) {
+
+			renderer.domElement.parentNode.removeChild( renderer.domElement );
+
+		}
+
+	}
+
+	window.addEventListener( 'beforeunload', dispose );
+</script>
+</body>
+</html>
