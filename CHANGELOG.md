@@ -1,3 +1,11 @@
+## [1.3.1](https://github.com/Byongho96/three-game-controls/compare/v1.3.0...v1.3.1) (2025-02-21)
+
+
+### Bug Fixes
+
+* adjust object rotation calculation ([a4b94de](https://github.com/Byongho96/three-game-controls/commit/a4b94de8985da70f499726c7cad88964b3d096ad))
+* modify to allow access to the Collider class ([0095255](https://github.com/Byongho96/three-game-controls/commit/009525537810edd112e2a7de043443fd2f40e605))
+
 # [1.3.0](https://github.com/Byongho96/three-game-controls/compare/v1.2.0...v1.3.0) (2025-02-04)
 
 
