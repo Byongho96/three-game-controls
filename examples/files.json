@@ -7,6 +7,7 @@
   ],
   "ThirdPerson": [
     "third-person_keyboard_controls",
+    "racing/third-person_keyboard_racingGame",
     "third-person_mousedrag_controls",
     "third-person_pointerlock_controls",
     "third-person_gyroscope_mixins"

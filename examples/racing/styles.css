@@ -1,0 +1,89 @@
+
+#speedometer_container{
+    pointer-events: none;
+    position: fixed;
+    bottom: 80px;
+    right: 80px;
+    width: 200px;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#wrapper {
+    position: absolute;
+}
+
+#speedometer {
+    pointer-events: none;
+    position: fixed;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: conic-gradient(
+        #fff 130deg,   
+        transparent 130deg 230deg,
+        #fff 230deg 360deg 
+    );
+    /* background-color: #333; */
+    -webkit-mask: radial-gradient(circle, transparent 60%, black 80%);
+    mask: radial-gradient(circle, transparent 60%, black 80%); 
+}
+
+
+#needle {
+    width: 4px;
+    height: 100px;
+    background: linear-gradient(transparent 50%, red);
+    position: fixed;
+    transform-origin: 0px 0px;
+    transform: rotate(calc(var(--angle, 0deg) + 50deg ));
+    transition: transform 0.5s ease-out;
+}
+
+#center {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    position: absolute;
+    bottom: 50%;
+    left: 50%;
+    transform: translate(-50%, 70%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+
+    #velocity {
+        font-size: 50px;
+        font-weight: bold;
+    }
+}
+
+#timelaps-container{
+    pointer-events: none;
+    position: fixed;
+    top: 80px;
+    left: 50px;
+    width: 150px;
+    height: 50px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.timelap {
+    padding: 1px 4px;
+    display: flex;
+    justify-content: space-between;
+    background-color: rgba(100, 100, 100, 0.7);
+    padding: 2px 4px;
+    border-radius: 3px;
+    color: white;
+    font-size: 15px;
+    line-height: 1.5;
+    font-weight: bold;
+}
