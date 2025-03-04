@@ -64,7 +64,6 @@
 	const gltfLoader = new GLTFLoader();
 
 	let controls;
-	let helpers;
 
 	const finishLineBox = new THREE.Box3();
 	const carBox = new THREE.Box3();
@@ -223,8 +222,6 @@
 		controls && updateLapProgress();
 
 		setLapTimer();
-
-		helpers && helpers.update();
 
 		renderer.render( scene, camera );
 
@@ -396,7 +393,6 @@
 		window.removeEventListener( 'resize', onWindowResize );
 
 		controls && controls.disconnect();
-		helpers && helpers.dispose();
 		renderer.dispose();
 
 		// Dispose of scene objects
