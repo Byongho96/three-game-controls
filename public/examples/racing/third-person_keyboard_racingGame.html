@@ -64,10 +64,12 @@
 	const gltfLoader = new GLTFLoader();
 
 	let controls;
-	let helpers;
 
 	const finishLineBox = new THREE.Box3();
 	const carBox = new THREE.Box3();
+
+	const _up = new THREE.Vector3( 0, 1, 0 );
+	const _quternion = new THREE.Quaternion();
 
 	Promise.all( [
 		gltfLoader.loadAsync( '../assets/models/raceway_map.glb' ),
@@ -105,14 +107,16 @@
 
 		} );
 
-		controls = new TPKeyboardControls( car.scene, renderer.domElement, world.scene.getObjectByName( 'Mesh_Raceway_Collision' ), {
+		const worldCollider = world.scene.getObjectByName( 'Mesh_Raceway_Collision' );
+
+		controls = new TPKeyboardControls( car.scene, renderer.domElement, worldCollider, {
 			'MOVE_FORWARD': car.animations[ 0 ],
 		}, camera );
 		controls.cameraPositionOffset = new THREE.Vector3( 0, 2, - 5 );
 		controls.enableZoom = false;
 		controls.syncAxisWithCamera = 'ALWAYS';
 		controls.enableRotationOnMove = false;
-		controls.groundedMoveSpeed = 100;
+		controls.groundedMoveSpeed = 80;
 		controls.cameraLerpFactor = 0.2;
 		controls.collider = new Collider( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, 0 ), 1 );
 		controls.keyToActions = {
@@ -126,6 +130,12 @@
 			'ArrowRight': [ 'ROTATE_RIGHT' ],
 			'ArrowLeft': [ 'ROTATE_LEFT' ]
 		};
+
+		controls.addEventListener( 'collide', ( { normal, target } ) => {
+
+			rotateToMatchSurface( target.object, normal );
+
+		} );
 
 
 	} );
@@ -207,15 +217,11 @@
 
 		controls && controls.update( delta );
 
-		controls && rotateToMatchSurface( 'Mesh_Raceway_Collision_Rework_24_-_Default_0' );
-
 		controls && setSpeedometer( );
 
 		controls && updateLapProgress();
 
 		setLapTimer();
-
-		helpers && helpers.update();
 
 		renderer.render( scene, camera );
 
@@ -355,43 +361,18 @@
 
 	// Adjusts the object's rotation to align with the surface it is on.
 
-	function rotateToMatchSurface( colliderObjectName ) {
+	function rotateToMatchSurface( object, normal ) {
 
-		const raycaster = new THREE.Raycaster();
-		raycaster.set( controls.object.position, new THREE.Vector3( 0, - 1, 0 ) );
+		// Only rotate the object if the normal is not too steep
+		if ( normal.y < 0.8 ) return;
 
-		const intersects = raycaster.intersectObjects( scene.children, true );
-		if ( intersects.length > 0 ) {
-
-			for ( const intersect of intersects ) {
-
-				if ( intersect.object.name === colliderObjectName && intersect.distance < 0.1 ) {
-
-					const normal = intersect.face.normal.clone();
+		const euler = controls.object.rotation.clone();
 	
-					const normalMatrix = new THREE.Matrix3().getNormalMatrix( intersect.object.matrixWorld );
-
-					normal.applyMatrix3( normalMatrix ).normalize();
-
-					const euler = controls.object.rotation.clone();
-
-					const up = new THREE.Vector3( 0, 1, 0 );
-
-					const quaternion = new THREE.Quaternion();
-					quaternion.setFromUnitVectors( up, normal );
-					const quaternion2 = new THREE.Quaternion().setFromAxisAngle( up, euler.y );
-					quaternion.multiply( quaternion2 );
-
-					controls.object.quaternion.copy( quaternion );
-
-				}
-
-			}
-
-		}
+		object.quaternion
+			.setFromUnitVectors( _up, normal )
+			.multiply( _quternion.setFromAxisAngle( _up, euler.y ) );
 
 	}
-
 
 	function onWindowResize() {
 
@@ -412,7 +393,6 @@
 		window.removeEventListener( 'resize', onWindowResize );
 
 		controls && controls.disconnect();
-		helpers && helpers.dispose();
 		renderer.dispose();
 
 		// Dispose of scene objects
