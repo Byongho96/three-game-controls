@@ -1,3 +1,11 @@
+## [1.3.2](https://github.com/Byongho96/three-game-controls/compare/v1.3.1...v1.3.2) (2025-03-27)
+
+
+### Bug Fixes
+
+* include index.d.ts in exports for type resolution ([#66](https://github.com/Byongho96/three-game-controls/issues/66)) ([f436bd5](https://github.com/Byongho96/three-game-controls/commit/f436bd5e8b36d82f942194fa90408320be0be466))
+* update car rotation logic in racing game ([#63](https://github.com/Byongho96/three-game-controls/issues/63)) ([de331c6](https://github.com/Byongho96/three-game-controls/commit/de331c68fee2686a8ce0825bdd5affbec33b08da))
+
 ## [1.3.1](https://github.com/Byongho96/three-game-controls/compare/v1.3.0...v1.3.1) (2025-02-21)
 
 
