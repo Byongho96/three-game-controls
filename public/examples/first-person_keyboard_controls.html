@@ -42,9 +42,9 @@
 			let helpers;
 
 			const gltfLoader = new GLTFLoader();
-			gltfLoader.setPath( 'https://byongho96.github.io/three-game-controls/assets/' );
+			gltfLoader.setPath( 'http://localhost:3000/public/examples/assets/models/' );
 			
-			Promise.all( [ gltfLoader.loadAsync( 'collision-world.glb' ) ] ).then(
+			Promise.all( [ gltfLoader.loadAsync( 'untitled.glb' ) ] ).then(
 				( [ world ] ) => {
 
 					scene.add( world.scene );
@@ -61,6 +61,7 @@
 
 					controls = new FPKeyboardControls( camera, renderer.domElement, world.scene );
 					controls.minYBoundary = - 10;
+					controls.resetPoint = new THREE.Vector3( 0, 20, 0 );
 
 					helpers = new PhysicsControlsHelper( controls, 0xffffff );
 					helpers.visible = false;

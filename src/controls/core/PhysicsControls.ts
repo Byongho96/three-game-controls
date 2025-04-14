@@ -9,9 +9,17 @@ export interface PhysicsControlsEventMap {
 
 }
 
+let si = 0;
+let ei = 300;
+const perfs = new Array( 301 ).fill( 0 );
+
+let sum = 0;
+
 const _collideEvent = { type: 'collide' as const };
 
 class PhysicsControls extends Controls<PhysicsControlsEventMap> {
+
+	private _p: HTMLParagraphElement;
 
 	private _world: Object3D | null = null;
 
@@ -105,6 +113,7 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 	private _objectWorldQuaternion: Quaternion = new Quaternion();
 	private _colliderLocalPosition: Vector3 = new Vector3();
 
+
 	/**
 	 * Constructs a new PhysicsControls instance.
 	 * @param object - The 3D object to apply physics controls to.
@@ -116,6 +125,13 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 		super( object, domElement );
 
 		this.world = world;
+		this._p = document.createElement( 'p' );
+		this._p.style.position = 'fixed';
+		this._p.style.top = '0';
+		this._p.style.right = '0';
+		this._p.style.color = 'white';
+		this._p.style.backgroundColor = 'black';
+		this.domElement?.parentElement?.appendChild( this._p );
 
 	}
 
@@ -252,6 +268,8 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 		if ( ! this.enabled ) return;
 
 		const stepDelta = delta / this.step;
+		const p1 = performance.now();
+
 
 		for ( let i = 0; i < this.step; i ++ ) {
 
@@ -278,6 +296,19 @@ class PhysicsControls extends Controls<PhysicsControlsEventMap> {
 		this._checkIsLanding();
 
 		this._teleportPlayerIfOutOfBounds();
+
+		const p2 = performance.now();
+
+		perfs[ si ] = ( p2 - p1 ) * 1000000;
+
+		sum += perfs[ si ];
+		sum -= perfs[ ei ];
+
+		si = ( si + 1 ) % 301;
+		ei = ( ei + 1 ) % 301;
+
+		this._p.textContent = `PhysicsControls: ${ ( sum / 300 ).toFixed( 2 ) } us`;
+
 
 		// Sync the object's position with the collider.
 		this._colliderLocalPosition.copy( this.collider.start );
