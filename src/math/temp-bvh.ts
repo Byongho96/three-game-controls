@@ -12,13 +12,14 @@ import { triangleCapsuleIntersect } from '../utils/math.js';
 
 const BIN_COUNT = 16;
 
+const _size = new Vector3();
 const _v1 = new Vector3();
 const _v2 = new Vector3();
 
 let obj = 0;
 let spa = 0;
 let tra = 0;
-let cnt = 0;
+// let cnt = 0;
 const _capsule = new Capsule();
 
 class BVH {
@@ -33,25 +34,10 @@ class BVH {
 	 */
 	bounds: Box3 = new Box3();
 
-	/** The max depth of the BVH tree. This is used to limit the recursion depth. Up to (2 ** depth) BVH nodes can be created.
+	/** The current level of this BVH node in the tree. This is used to limit the max depth of the BVH.
 	 * @default 0
 	 */
-	level: number = 0;
-
-	/** The max depth of the BVH tree. This is used to limit the recursion depth. Up to (2 ** depth) BVH nodes can be created.
-	 * @default 48
-	 */
-	maxLevel: number = 48;
-
-	/** The max depth of the BVH tree. This is used to limit the recursion depth. Up to (2 ** depth) BVH nodes can be created.
-	 * @default 48
-	 */
-	depth: number = 48;
-
-	/** The threshold triangle size used to determine duplication at boundaries. Triangles larger than this value may be duplicated across sub-BVH nodes.
-	 * @default 0.01
-	 */
-	duplicationThreshold: number = 0.01;
+	depth: number = 0;
 
 	/** Which layers (bitmask) this BVH should consider.
 	 * @default new THREE.Layers()
@@ -67,6 +53,31 @@ class BVH {
 	 * @default null
 	 */
 	maxVolume: BVH | null = null;
+
+	/** The max depth of the BVH tree. This is used to limit the recursion depth. Up to (2 ** depth) BVH nodes can be created.
+	 * @default 48
+	 */
+	maxDepth: number = 48;
+
+	/** The maximum number of triangles that can be stored at a single BVH node before it splits.
+	 * @default 9
+	 */
+	maxLeafSize: number = 8;
+
+	/** The number of bins used for the object split. This is used to determine how to split the triangles into sub-volumes.
+	 * @default 16
+	 */
+	objectSplitBinCount: number = 16;
+
+	/** The accuracy of the spatial split. If the triangle is smaller than this value, it will not be duplicated in both sub-volumes.
+	 * @default 0.01
+	 */
+	spatialSplitAccuracy: number = 0.01;
+
+	/** The split axis of this BVH node. This is used to determine how to split the triangles into sub-volumes.
+	 * @default null
+	 */
+	splitAxis: 'x' | 'y' | 'z' | null = null;
 
 	/** Triangles directly stored at this volume. If this volume has sub-volumes, this will be empty.
 	 * @default []
@@ -88,12 +99,9 @@ class BVH {
 	 */
 	addTriangle( triangle: Triangle ): void {
 
-		this.bounds.min.x = Math.min( this.bounds.min.x, triangle.a.x, triangle.b.x, triangle.c.x );
-		this.bounds.min.y = Math.min( this.bounds.min.y, triangle.a.y, triangle.b.y, triangle.c.y );
-		this.bounds.min.z = Math.min( this.bounds.min.z, triangle.a.z, triangle.b.z, triangle.c.z );
-		this.bounds.max.x = Math.max( this.bounds.max.x, triangle.a.x, triangle.b.x, triangle.c.x );
-		this.bounds.max.y = Math.max( this.bounds.max.y, triangle.a.y, triangle.b.y, triangle.c.y );
-		this.bounds.max.z = Math.max( this.bounds.max.z, triangle.a.z, triangle.b.z, triangle.c.z );
+		this.bounds.expandByPoint( triangle.a );
+		this.bounds.expandByPoint( triangle.b );
+		this.bounds.expandByPoint( triangle.c );
 
 		this.triangles.push( triangle );
 
@@ -106,9 +114,7 @@ class BVH {
 
 		this.box.copy( this.bounds );
 
-		this.box.min.x -= 0.01;
-		this.box.min.y -= 0.01;
-		this.box.min.z -= 0.01;
+		this.box.min.addScalar( - 0.01 ); // to avoid zero size boxes
 
 	}
 
@@ -119,90 +125,49 @@ class BVH {
 
 		if ( this.bounds.isEmpty() ) return;
 
-		this.box.min.x = Math.max( this.box.min.x, this.bounds.min.x );
-		this.box.min.y = Math.max( this.box.min.y, this.bounds.min.y );
-		this.box.min.z = Math.max( this.box.min.z, this.bounds.min.z );
-		this.box.max.x = Math.min( this.box.max.x, this.bounds.max.x );
-		this.box.max.y = Math.min( this.box.max.y, this.bounds.max.y );
-		this.box.max.z = Math.min( this.box.max.z, this.bounds.max.z );
+		this.box.min.max( this.bounds.min );
+		this.box.max.min( this.bounds.max );
 
 	}
 
-	/**
-	 * Recursively splits this node into two child BVHs along the largest axis, distributing triangles into sub-volumes.
-	 * @param {number} level - Current depth of recursion (used to limit max depth).
-	 */
-	split(): void {
+	protected _computeObjectSplitCost(): {cost:number, minVolume: BVH, maxVolume: BVH} {
 
-		this.optimizeBox();
+		if ( this.splitAxis === null ) throw new Error( 'splitAxis is null' );
 
-		if ( this.level > this.maxLevel - 1 ) {
-
-			cnt += 1;
-			return;
-
-		}
-
-
-
-		if ( this.triangles.length < 9 ) {
-
-			cnt += 1;
-			return;
-
-		}
-
-
-
-		const size = this.box.getSize( _v1 );
-
-		// Determine the longest axis
-		let splitAxis: 'x' | 'y' | 'z' = 'x';
-
-		if ( size.y > size.x && size.y > size.z ) splitAxis = 'y';
-
-		if ( size.z > size.y && size.z > size.x ) splitAxis = 'z';
-
+		const size = this.box.getSize( _size );
 
 		// Distribute triangles into bins
-		const bins = new Array( BIN_COUNT ).fill( 0 ).map( () => ( { triangles: [] as Triangle[], box: new Box3() } ) );
+		const bins = new Array( BIN_COUNT ).fill( 0 ).map( () => ( { triangles: [] as Triangle[], bounds: new Box3() } ) );
 
-		for ( let i = 0; i < this.triangles.length; i ++ ) {
+		for ( const triangle of this.triangles ) {
 
-			const triangle = this.triangles[ i ];
-			const center = triangle.getMidpoint( _v2 );
+			const center = triangle.getMidpoint( _v1 );
 
-			let binIndex = Math.floor( ( center[ splitAxis ] - this.box.min[ splitAxis ] ) / size[ splitAxis ] * BIN_COUNT );
+			let binIndex = Math.floor( ( center[ this.splitAxis ] - this.bounds.min[ this.splitAxis ] ) / size[ this.splitAxis ] * BIN_COUNT );
 
-			if ( binIndex > BIN_COUNT - 1 ) binIndex = BIN_COUNT - 1;
-			if ( binIndex < 0 ) binIndex = 0;
+			binIndex = Math.max( 0, Math.min( binIndex, BIN_COUNT - 1 ) );
+
+			bins[ binIndex ].bounds.expandByPoint( triangle.a );
+			bins[ binIndex ].bounds.expandByPoint( triangle.b );
+			bins[ binIndex ].bounds.expandByPoint( triangle.c );
 
 			bins[ binIndex ].triangles.push( triangle );
 
-			bins[ binIndex ].box.expandByPoint( triangle.a );
-			bins[ binIndex ].box.expandByPoint( triangle.b );
-			bins[ binIndex ].box.expandByPoint( triangle.c );
-
 		}
 
-		// Cumulate bins to find the best split
-		const leftCumBins = new Array( BIN_COUNT ).fill( 0 ).map( () => ( new Box3() ) );
-		const rightCumBins = new Array( BIN_COUNT ).fill( 0 ).map( () => ( new Box3() ) );
+		// Cumulate bins from left to right and right to left
+		const minCumBox = new Array<Box3>( BIN_COUNT );
+		const maxCumBox = new Array<Box3>( BIN_COUNT );
 
-		leftCumBins[ 0 ].copy( bins[ 0 ].box );
-		leftCumBins[ 0 ].intersect( this.box );
-
-		rightCumBins[ BIN_COUNT - 1 ].copy( bins[ BIN_COUNT - 1 ].box );
-		rightCumBins[ BIN_COUNT - 1 ].intersect( this.box );
+		minCumBox[ 0 ] = bins[ 0 ].bounds.clone().intersect( this.box );
+		maxCumBox[ BIN_COUNT - 1 ] = bins[ BIN_COUNT - 1 ].bounds.clone().intersect( this.box );
 
 		for ( let li = 1; li < BIN_COUNT - 1; li ++ ) {
 
-			leftCumBins[ li ].copy( leftCumBins[ li - 1 ] ).union( bins[ li ].box );
-			leftCumBins[ li ].intersect( this.box );
+			minCumBox[ li ] = minCumBox[ li - 1 ].clone().union( bins[ li ].bounds ).intersect( this.box );
 
 			const ri = BIN_COUNT - li - 1;
-			rightCumBins[ ri ].copy( rightCumBins[ ri + 1 ] ).union( bins[ ri ].box );
-			rightCumBins[ ri ].intersect( this.box );
+			maxCumBox[ ri ] = maxCumBox[ ri + 1 ].clone().union( bins[ ri ].bounds ).intersect( this.box );
 
 		}
 
@@ -211,21 +176,21 @@ class BVH {
 		let bestIdx = - 1;
 		let bestCost = Infinity;
 
-		let N_L = 0;
-		let N_R = this.triangles.length;
+		let N_min = 0;
+		let N_max = this.triangles.length;
 
 		for ( let i = 0; i < BIN_COUNT - 1; i ++ ) {
 
-			N_L += bins[ i ].triangles.length;
-			N_R -= bins[ i ].triangles.length;
+			N_min += bins[ i ].triangles.length;
+			N_max -= bins[ i ].triangles.length;
 
-			leftCumBins[ i ].getSize( _v2 );
-			const A_L = _v2.x * _v2.y + _v2.y * _v2.z + _v2.z * _v2.x;
+			minCumBox[ i ].getSize( _v2 );
+			const A_min = _v2.x * _v2.y + _v2.y * _v2.z + _v2.z * _v2.x;
 
-			rightCumBins[ i + 1 ].getSize( _v2 );
-			const A_R = _v2.x * _v2.y + _v2.y * _v2.z + _v2.z * _v2.x;
+			maxCumBox[ i + 1 ].getSize( _v2 );
+			const A_max = _v2.x * _v2.y + _v2.y * _v2.z + _v2.z * _v2.x;
 
-			const cost = N_L * A_L + N_R * A_R;
+			const cost = N_min * A_min + N_max * A_max;
 
 			if ( cost < bestCost ) {
 
@@ -236,97 +201,150 @@ class BVH {
 
 		}
 
-		// Spatial Split
-		const currentCost = this.triangles.length * size.x * size.y + size.y * size.z + size.z * size.x;
+		// Create sub-volumes based on the best bin split
+		const minVolume = new BVH( minCumBox[ bestIdx ] );
+		minVolume.triangles = bins.slice( 0, bestIdx + 1 ).flatMap( ( b ) => b.triangles );
+		for ( let i = 0; i < bestIdx + 1; i ++ ) {
 
-		if ( bestCost > currentCost * 0.8 ) {
-
-			spa += 1;
-
-			const splitPoint = this.box.getCenter( _v1 )[ splitAxis ];
-
-			const minVolume = new BVH( this.box.clone() );
-			minVolume.box.max[ splitAxis ] = splitPoint;
-
-			const maxVolume = new BVH( this.box.clone() );
-			maxVolume.box.min[ splitAxis ] = splitPoint;
-
-			const triangleList = this.triangles; // pop을 쓰지 말고 참조
-			this.triangles = [];
-
-			for ( const triangle of triangleList ) {
-
-				if ( triangle.getArea() > this.duplicationThreshold ) {
-
-					if ( minVolume.box.intersectsTriangle( triangle ) ) minVolume.addTriangle( triangle );
-					if ( maxVolume.box.intersectsTriangle( triangle ) ) maxVolume.addTriangle( triangle );
-
-				} else {
-
-					const center = triangle.getMidpoint( _v1 )[ splitAxis ];
-					if ( center < splitPoint ) {
-
-						minVolume.addTriangle( triangle );
-
-					} else {
-
-						maxVolume.addTriangle( triangle );
-
-					}
-
-				}
-
-			}
-
-			// if ( minVolume.triangles.length == 0 || maxVolume.triangles.length == 0 ) return;
-			if ( minVolume.triangles.length > 0 ) {
-
-				this.minVolume = minVolume;
-				minVolume.level = this.level + 1;
-				minVolume.maxLevel = this.maxLevel;
-				minVolume.duplicationThreshold = this.duplicationThreshold;
-				this.minVolume.split();
-
-			}
-
-			if ( maxVolume.triangles.length > 0 ) {
-
-				this.maxVolume = maxVolume;
-				maxVolume.level = this.level + 1;
-				maxVolume.maxLevel = this.maxLevel;
-				maxVolume.duplicationThreshold = this.duplicationThreshold;
-				this.maxVolume.split();
-
-			}
-
-
-			return;
+			minVolume.bounds.union( bins[ i ].bounds );
 
 		}
 
-		obj += 1;
+		const maxVolume = new BVH( maxCumBox[ bestIdx + 1 ] );
+		maxVolume.triangles = bins.slice( bestIdx + 1 ).flatMap( ( b ) => b.triangles );
+		for ( let i = bestIdx + 1; i < BIN_COUNT; i ++ ) {
 
-		// Create sub-volumes based on the best split
-		const leftVolume = new BVH( leftCumBins[ bestIdx ] );
-		leftVolume.level = this.level + 1;
-		leftVolume.maxLevel = this.maxLevel;
-		leftVolume.triangles = bins.reduce( ( acc, bin, i ) => i <= bestIdx ? acc.concat( bin.triangles ) : acc, [] as Triangle[] );
+			maxVolume.bounds.union( bins[ i ].bounds );
 
-		const rightVolume = new BVH( rightCumBins[ bestIdx + 1 ] );
-		rightVolume.level = this.level + 1;
-		rightVolume.maxLevel = this.maxLevel;
-		rightVolume.triangles = bins.reduce( ( acc, bin, i ) => i >= bestIdx + 1 ? acc.concat( bin.triangles ) : acc, [] as Triangle[] );
+		}
+
+		return { cost: bestCost, minVolume: minVolume, maxVolume: maxVolume };
+
+	}
 
 
-		if ( leftVolume.triangles.length == 0 || rightVolume.triangles.length == 0 ) return;
+	protected _computeSpatialSplitCost(): {cost:number, minVolume: BVH, maxVolume: BVH} {
 
-		this.minVolume = leftVolume;
-		this.maxVolume = rightVolume;
+		if ( this.splitAxis === null ) throw new Error( 'splitAxis is null' );
+
+		const splitPoint = this.box.getCenter( _v1 )[ this.splitAxis ];
+
+		// Create two new BVH nodes for the spatial split
+		const minVolume = new BVH( this.box.clone() );
+		minVolume.box.max[ this.splitAxis ] = splitPoint;
+
+		const maxVolume = new BVH( this.box.clone() );
+		maxVolume.box.min[ this.splitAxis ] = splitPoint;
+
+		for ( const triangle of this.triangles ) {
+
+			if ( triangle.getArea() > this.spatialSplitAccuracy ) {
+
+				// If the triangle is larger than the duplication threshold,  add it to both volumes if it intersects
+				if ( minVolume.box.intersectsTriangle( triangle ) ) minVolume.addTriangle( triangle );
+				if ( maxVolume.box.intersectsTriangle( triangle ) ) maxVolume.addTriangle( triangle );
+
+			} else {
+
+				// If the triangle is smaller than the duplication threshold, add it to the volume based on its center
+				const center = triangle.getMidpoint( _v1 )[ this.splitAxis ];
+				if ( center < splitPoint ) minVolume.addTriangle( triangle );
+				else maxVolume.addTriangle( triangle );
+
+			}
+
+		}
+
+		// Calculate the sah cost for the spatial split
+		minVolume.box.getSize( _v2 );
+		const A_min = _v2.x * _v2.y + _v2.y * _v2.z + _v2.z * _v2.x;
+
+		maxVolume.box.getSize( _v2 );
+		const A_max = _v2.x * _v2.y + _v2.y * _v2.z + _v2.z * _v2.x;
+
+		const cost = minVolume.triangles.length * A_min + maxVolume.triangles.length * A_max;
+
+		return { cost: cost, minVolume: minVolume, maxVolume: maxVolume };
+
+	}
+
+	protected _setChildren( minVolume: BVH, maxVolume: BVH ): void {
 
 		this.triangles = [];
 
-		this.minVolume.split( );
-		this.maxVolume.split( );
+		if ( minVolume.triangles.length > 0 ) {
+
+			this.minVolume = minVolume;
+			this.minVolume.depth = this.depth + 1;
+			this.minVolume.maxDepth = this.maxDepth;
+			this.minVolume.maxLeafSize = this.maxLeafSize;
+			this.minVolume.objectSplitBinCount = this.objectSplitBinCount;
+			this.minVolume.spatialSplitAccuracy = this.spatialSplitAccuracy;
+
+		}
+
+		if ( maxVolume.triangles.length > 0 ) {
+
+			this.maxVolume = maxVolume;
+			this.maxVolume.depth = this.depth + 1;
+			this.maxVolume.maxDepth = this.maxDepth;
+			this.maxVolume.maxLeafSize = this.maxLeafSize;
+			this.maxVolume.objectSplitBinCount = this.objectSplitBinCount;
+			this.maxVolume.spatialSplitAccuracy = this.spatialSplitAccuracy;
+
+		}
+
+	}
+
+	/**
+	 * Recursively splits this node into two child BVHs along the largest axis, distributing triangles into sub-volumes.
+	 */
+	split(): void {
+
+		this.optimizeBox();
+
+		if ( this.depth >= this.maxDepth || this.triangles.length < this.maxLeafSize + 1 ) return;
+
+		// Determine the longest axis
+		const size = this.box.getSize( _size );
+
+		this.splitAxis = 'x';
+		if ( size.y > size.x && size.y > size.z ) this.splitAxis = 'y';
+		if ( size.z > size.x && size.z > size.y ) this.splitAxis = 'z';
+
+
+		// Choose the optimal split method based on the number of triangles and depth and the SAH cost
+		const currentCost = this.triangles.length * size.x * size.y + size.y * size.z + size.z * size.x;
+
+		const { cost: objectSplitCost, minVolume: objectMinVolume, maxVolume: objectMaxVolume } = this._computeObjectSplitCost();
+
+		if ( objectSplitCost > currentCost * 0.8 ) {
+
+			const { cost: spatialSplitCost, minVolume: spatialMinVolume, maxVolume: spatialMAxVolume } = this._computeSpatialSplitCost();
+
+			if ( spatialSplitCost < objectSplitCost ) {
+
+				spa += 1;
+				this._setChildren( spatialMinVolume, spatialMAxVolume );
+
+			} else {
+
+				obj += 1;
+
+				this._setChildren( objectMinVolume, objectMaxVolume );
+
+			}
+
+		} else {
+
+			obj += 1;
+			this._setChildren( objectMinVolume, objectMaxVolume );
+
+		}
+
+		// Recursively split the child nodes
+		if ( this.minVolume ) this.minVolume.split();
+		if ( this.maxVolume ) this.maxVolume.split();
 
 	}
 
@@ -337,7 +355,7 @@ class BVH {
 
 		this.calcBox();
 		this.split();
-		console.log( 'cnt', cnt );
+		// console.log( 'cnt', cnt );
 
 	}
 
@@ -347,12 +365,21 @@ class BVH {
 	 */
 	buildFromObject( group: Object3D ): void {
 
+		// requestAnimationFrame
+
 		group.updateWorldMatrix( true, true );
 
 		// Traverse the group and collect triangles
 		group.traverse( ( obj ) => {
 
 			if ( ! ( obj instanceof Mesh ) ) return;
+
+			if ( [ /bamboo/, /Pine/, /small/, /grass/, /maple/, /tree/, /elec/, /SM_house_Material #108_0/, /SM_cakeShop_Material #15_0/, /sm_houseBrewery_Material #25_0/, /SM_yakitoriRestaurant_Material #25_0/ ].some( ( re ) => re.test( obj.name ) ) ) {
+
+				console.log( obj.name );
+				return;
+
+			}
 
 			if ( this.layers.test( obj.layers ) ) {
 

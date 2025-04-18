@@ -245,6 +245,12 @@ class BVH {
 		group.traverse( ( obj ) => {
 
 			if ( ! ( obj instanceof Mesh ) ) return;
+			if ( [ /bamboo/, /Pine/, /small/, /grass/, /maple/, /tree/, /elec/, /SM_house_Material #108_0/, /SM_cakeShop_Material #15_0/, /sm_houseBrewery_Material #25_0/, /SM_yakitoriRestaurant_Material #25_0/ ].some( ( re ) => re.test( obj.name ) ) ) {
+
+				console.log( obj.name );
+				return;
+
+			}
 
 			if ( this.layers.test( obj.layers ) ) {
 
