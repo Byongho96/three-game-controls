@@ -17,6 +17,8 @@ const _v2 = new Vector3();
 
 let obj = 0;
 let spa = 0;
+let tra = 0;
+let cnt = 0;
 const _capsule = new Capsule();
 
 class BVH {
@@ -134,18 +136,32 @@ class BVH {
 
 		this.optimizeBox();
 
-		if ( this.level > this.maxLevel - 1 ) return;
+		if ( this.level > this.maxLevel - 1 ) {
 
-		if ( this.triangles.length < 8 ) return;
+			cnt += 1;
+			return;
+
+		}
+
+
+
+		if ( this.triangles.length < 9 ) {
+
+			cnt += 1;
+			return;
+
+		}
+
+
 
 		const size = this.box.getSize( _v1 );
 
 		// Determine the longest axis
 		let splitAxis: 'x' | 'y' | 'z' = 'x';
 
-		if ( size.y > size.x ) splitAxis = 'y';
+		if ( size.y > size.x && size.y > size.z ) splitAxis = 'y';
 
-		if ( size.z > size.y ) splitAxis = 'z';
+		if ( size.z > size.y && size.z > size.x ) splitAxis = 'z';
 
 
 		// Distribute triangles into bins
@@ -174,14 +190,19 @@ class BVH {
 		const rightCumBins = new Array( BIN_COUNT ).fill( 0 ).map( () => ( new Box3() ) );
 
 		leftCumBins[ 0 ].copy( bins[ 0 ].box );
+		leftCumBins[ 0 ].intersect( this.box );
+
 		rightCumBins[ BIN_COUNT - 1 ].copy( bins[ BIN_COUNT - 1 ].box );
+		rightCumBins[ BIN_COUNT - 1 ].intersect( this.box );
 
 		for ( let li = 1; li < BIN_COUNT - 1; li ++ ) {
 
 			leftCumBins[ li ].copy( leftCumBins[ li - 1 ] ).union( bins[ li ].box );
+			leftCumBins[ li ].intersect( this.box );
 
 			const ri = BIN_COUNT - li - 1;
 			rightCumBins[ ri ].copy( rightCumBins[ ri + 1 ] ).union( bins[ ri ].box );
+			rightCumBins[ ri ].intersect( this.box );
 
 		}
 
@@ -189,7 +210,6 @@ class BVH {
 		// https://www.sci.utah.edu/~wald/Publications/2007/ParallelBVHBuild/fastbuild.pdf
 		let bestIdx = - 1;
 		let bestCost = Infinity;
-		let bestSurface = Infinity;
 
 		let N_L = 0;
 		let N_R = this.triangles.length;
@@ -211,17 +231,15 @@ class BVH {
 
 				bestIdx = i;
 				bestCost = cost;
-				bestSurface = A_L + A_R;
 
 			}
 
 		}
 
 		// Spatial Split
-		this.box.getSize( _v2 );
-		const A = _v2.x * _v2.y + _v2.y * _v2.z + _v2.z * _v2.x;
+		const currentCost = this.triangles.length * size.x * size.y + size.y * size.z + size.z * size.x;
 
-		if ( bestSurface > A * 1.5 ) {
+		if ( bestCost > currentCost * 0.8 ) {
 
 			spa += 1;
 
@@ -233,24 +251,19 @@ class BVH {
 			const maxVolume = new BVH( this.box.clone() );
 			maxVolume.box.min[ splitAxis ] = splitPoint;
 
-			for ( let i = 0; i < this.triangles.length; i ++ ) {
+			const triangleList = this.triangles; // pop을 쓰지 말고 참조
+			this.triangles = [];
 
-				const triangle = this.triangles[ i ];
+			for ( const triangle of triangleList ) {
 
 				if ( triangle.getArea() > this.duplicationThreshold ) {
 
-					// Duplicate a triangle that cross the boundary
-
 					if ( minVolume.box.intersectsTriangle( triangle ) ) minVolume.addTriangle( triangle );
-
 					if ( maxVolume.box.intersectsTriangle( triangle ) ) maxVolume.addTriangle( triangle );
 
 				} else {
 
-					// Assign a triangle to a sub-volume based on the center of the triangle
-
 					const center = triangle.getMidpoint( _v1 )[ splitAxis ];
-
 					if ( center < splitPoint ) {
 
 						minVolume.addTriangle( triangle );
@@ -265,22 +278,27 @@ class BVH {
 
 			}
 
-			if ( minVolume.triangles.length == 0 || maxVolume.triangles.length == 0 ) return;
+			// if ( minVolume.triangles.length == 0 || maxVolume.triangles.length == 0 ) return;
+			if ( minVolume.triangles.length > 0 ) {
 
-			this.minVolume = minVolume;
-			minVolume.level = this.level + 1;
-			minVolume.maxLevel = this.maxLevel;
-			minVolume.duplicationThreshold = this.duplicationThreshold;
+				this.minVolume = minVolume;
+				minVolume.level = this.level + 1;
+				minVolume.maxLevel = this.maxLevel;
+				minVolume.duplicationThreshold = this.duplicationThreshold;
+				this.minVolume.split();
 
-			this.maxVolume = maxVolume;
-			maxVolume.level = this.level + 1;
-			maxVolume.maxLevel = this.maxLevel;
-			maxVolume.duplicationThreshold = this.duplicationThreshold;
+			}
 
-			this.triangles = [];
+			if ( maxVolume.triangles.length > 0 ) {
 
-			this.minVolume.split();
-			this.maxVolume.split();
+				this.maxVolume = maxVolume;
+				maxVolume.level = this.level + 1;
+				maxVolume.maxLevel = this.maxLevel;
+				maxVolume.duplicationThreshold = this.duplicationThreshold;
+				this.maxVolume.split();
+
+			}
+
 
 			return;
 
@@ -319,6 +337,7 @@ class BVH {
 
 		this.calcBox();
 		this.split();
+		console.log( 'cnt', cnt );
 
 	}
 
@@ -334,6 +353,13 @@ class BVH {
 		group.traverse( ( obj ) => {
 
 			if ( ! ( obj instanceof Mesh ) ) return;
+
+			if ( [ /bamboo/, /Pine/, /small/, /grass/, /maple/, /tree/, /elec/, /SM_house_Material #108_0/, /SM_cakeShop_Material #15_0/, /sm_houseBrewery_Material #25_0/, /SM_yakitoriRestaurant_Material #25_0/ ].some( ( re ) => re.test( obj.name ) ) ) {
+
+				console.log( obj.name );
+				return;
+
+			}
 
 			if ( this.layers.test( obj.layers ) ) {
 
@@ -419,6 +445,7 @@ class BVH {
 
 		if ( this.triangles.length > 0 ) {
 
+			tra += 1;
 			for ( let j = 0; j < this.triangles.length; j ++ ) {
 
 				if ( triangles.indexOf( this.triangles[ j ] ) === - 1 ) triangles.push( this.triangles[ j ] );
@@ -492,9 +519,10 @@ class BVH {
 
 		const triangles: Triangle[] = [];
 
+		tra = 0;
 		this._getCapsuleTriangles( _capsule, triangles );
 
-		console.log( 'capsule', triangles.length );
+		console.log( 'capsule', triangles.length, 'tra', tra );
 
 		let hit = false;
 

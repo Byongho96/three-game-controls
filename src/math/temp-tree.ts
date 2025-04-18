@@ -13,6 +13,9 @@ import { triangleCapsuleIntersect } from '../utils/math.js';
 const _v1 = new Vector3();
 
 const _capsule = new Capsule();
+let tra = 0;
+let spa = 0;
+let cnt = 0;
 
 class BVH {
 
@@ -119,6 +122,8 @@ class BVH {
 
 		const size = this.box.getSize( _v1 );
 
+		spa += 1;
+
 		// Determine the longest axis
 		let splitAxis: 'x' | 'y' | 'z' = 'x';
 
@@ -198,11 +203,19 @@ class BVH {
 
 			minVolume.split( level + 1 );
 
+		} else {
+
+			cnt += 1;
+
 		}
 
 		if ( maxVolume.triangles.length > 8 && level < this.depth ) {
 
 			maxVolume.split( level + 1 );
+
+		} else {
+
+			cnt += 1;
 
 		}
 
@@ -215,6 +228,8 @@ class BVH {
 
 		this.calcBox();
 		this.split( 0 );
+		console.log( 'spa', spa );
+		console.log( 'cnt', cnt );
 
 	}
 
@@ -328,6 +343,8 @@ class BVH {
 
 			if ( this.minVolume.triangles.length > 0 ) {
 
+				tra += 1;
+
 				for ( let j = 0; j < this.minVolume.triangles.length; j ++ ) {
 
 					if ( triangles.indexOf( this.minVolume.triangles[ j ] ) === - 1 ) triangles.push( this.minVolume.triangles[ j ] );
@@ -346,6 +363,8 @@ class BVH {
 		if ( this.maxVolume && capsule.intersectsBox( this.maxVolume.box ) ) {
 
 			if ( this.maxVolume.triangles.length > 0 ) {
+
+				tra += 1;
 
 				for ( let j = 0; j < this.maxVolume.triangles.length; j ++ ) {
 
@@ -418,9 +437,10 @@ class BVH {
 
 		const triangles: Triangle[] = [];
 
+		tra = 0;
 		this._getCapsuleTriangles( _capsule, triangles );
 
-		console.log( triangles.length );
+		console.log( 'capsule', triangles.length, 'tra', tra );
 
 		let hit = false;
 

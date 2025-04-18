@@ -48,6 +48,7 @@
 				( [ world ] ) => {
 
 					scene.add( world.scene );
+					world.scene.scale.multiplyScalar( 3 );
 					world.scene.traverse( child => {
 
 						if ( child.isMesh ) {
@@ -58,6 +59,7 @@
 						}
 
 					} );
+					console.log( world.scene );
 
 					controls = new FPKeyboardControls( camera, renderer.domElement, world.scene );
 					controls.minYBoundary = - 10;
